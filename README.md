@@ -34,6 +34,7 @@
 -   术语表：[CONTEXT.md](./CONTEXT.md)
 -   架构决策记录：[docs/adr/](./docs/adr/)
 -   帮助文档：[docs/zh/Start-Here.md](./docs/zh/Start-Here.md)
+-   发布前审计清单：[docs/zh/Release-Checklist.md](./docs/zh/Release-Checklist.md)
 
 ## 本地开发
 
