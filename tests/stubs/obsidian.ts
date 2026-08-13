@@ -149,27 +149,39 @@ export function setIcon(): void {}
 export function setTooltip(): void {}
 
 export type Debouncer<T extends unknown[], V> = {
-    (...args: T): Debouncer<T, V>;
-    cancel(): Debouncer<T, V>;
+    (...args: T): void;
+    cancel(): void;
     run(): V | void;
 };
 
 export function debounce<T extends unknown[], V>(
-    callback: (...args: T) => V
+    callback: (...args: T) => V,
+    timeout?: number,
+    _reset?: boolean
 ): Debouncer<T, V> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     let pendingArguments: T | undefined;
     const debouncer = ((...args: T) => {
         pendingArguments = args;
-        return debouncer;
+        if (timer !== undefined) clearTimeout(timer);
+        if (timeout === undefined || timeout === 0) {
+            callback(...args);
+        } else {
+            timer = setTimeout(() => {
+                timer = undefined;
+                callback(...(pendingArguments as T));
+            }, timeout);
+        }
     }) as Debouncer<T, V>;
     debouncer.cancel = () => {
+        if (timer !== undefined) clearTimeout(timer);
+        timer = undefined;
         pendingArguments = undefined;
-        return debouncer;
     };
     debouncer.run = () => {
-        if (!pendingArguments) return;
+        if (!pendingArguments) return undefined;
         const args = pendingArguments;
-        pendingArguments = undefined;
+        debouncer.cancel();
         return callback(...args);
     };
     return debouncer;
