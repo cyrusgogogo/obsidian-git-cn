@@ -31,7 +31,18 @@ bash install.sh "/path/to/your/vault"
 
 脚本会自动安装依赖、编译并把插件复制到你的笔记库。重启 Obsidian 后，在「设置 → 第三方插件」中启用「Obsidian Git（中文版）」。
 
-### 方式二：手动构建安装
+### 方式二：BRAT 安装（GitHub Release）
+
+面向已发布的稳定版本，无需克隆仓库或自己编译：
+
+1. 在 Obsidian 社区插件市场搜索并安装启用 [BRAT](https://github.com/TfTHacker/obsidian42-brat)（Obsidian42-BRAT）。
+2. 打开「设置 → BRAT → Add Beta plugin」，输入仓库名 `cyrusgogogo/obsidian-git-cn` 并确认；BRAT 会自动把最新 [GitHub Release](https://github.com/cyrusgogogo/obsidian-git-cn/releases) 中的 `main.js`、`manifest.json`、`styles.css` 安装到你的笔记库。
+3. 重载 Obsidian，在「设置 → 第三方插件」中启用「Obsidian Git（中文版）」，确认版本显示为 `1.0.0`。
+4. 以后发布新版本时，在 BRAT 设置中点「Update」即可升级；插件上架官方社区市场后，也可删掉 BRAT 记录改走市场更新。
+
+网络提示：BRAT 直接从 GitHub 下载 Release 产物，与插件的 Git 认证配置相互独立；若访问 GitHub 受限，请先配置代理，或改用「方式三」手动构建。
+
+### 方式三：手动构建安装
 
 1. 环境要求：Node ≥24、pnpm ≥11（Windows 可参考 [nvm-windows](https://github.com/coreybutler/nvm-windows)，国内网络可用 [npmmirror](https://npmmirror.com/mirrors/node/)）。
 2. 编译：
