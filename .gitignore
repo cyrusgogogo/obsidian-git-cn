@@ -16,3 +16,6 @@ yarn.lock
 .vscode
 
 .DS_Store
+
+# 本地开发用的需求规格与工单（仅保留在本地）
+.scratch/
