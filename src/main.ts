@@ -380,7 +380,7 @@ export default class ObsidianGit extends Plugin {
 
         if (source == "file-explorer-context-menu") {
             menu.addItem((item) => {
-                item.setTitle(`Git: Stage`)
+                item.setTitle(t("Git: Stage"))
                     .setIcon("plus-circle")
                     .setSection("action")
                     .onClick((_) => {
@@ -402,7 +402,7 @@ export default class ObsidianGit extends Plugin {
                     });
             });
             menu.addItem((item) => {
-                item.setTitle(`Git: Unstage`)
+                item.setTitle(t("Git: Unstage"))
                     .setIcon("minus-circle")
                     .setSection("action")
                     .onClick((_) => {
@@ -425,7 +425,7 @@ export default class ObsidianGit extends Plugin {
                     });
             });
             menu.addItem((item) => {
-                item.setTitle(`Git: Add to .gitignore`)
+                item.setTitle(t("Git: Add to .gitignore"))
                     .setIcon("file-x")
                     .setSection("action")
                     .onClick((_) => {
@@ -439,7 +439,7 @@ export default class ObsidianGit extends Plugin {
 
         if (source == "git-source-control") {
             menu.addItem((item) => {
-                item.setTitle(`Git: Add to .gitignore`)
+                item.setTitle(t("Git: Add to .gitignore"))
                     .setIcon("file-x")
                     .setSection("action")
                     .onClick((_) => {
@@ -455,7 +455,7 @@ export default class ObsidianGit extends Plugin {
                 gitManager instanceof FileSystemAdapter
             ) {
                 menu.addItem((item) => {
-                    item.setTitle("Open in default app")
+                    item.setTitle(t("Open in default app"))
                         .setIcon("arrow-up-right")
                         .setSection("action")
                         .onClick((_) => {
@@ -463,7 +463,7 @@ export default class ObsidianGit extends Plugin {
                         });
                 });
                 menu.addItem((item) => {
-                    item.setTitle("Show in system explorer")
+                    item.setTitle(t("Show in system explorer"))
                         .setIcon("arrow-up-right")
                         .setSection("action")
                         .onClick((_) => {

@@ -3,6 +3,7 @@ import type { EventRef, ViewStateResult, WorkspaceLeaf } from "obsidian";
 import { ItemView, Platform } from "obsidian";
 import { DIFF_VIEW_CONFIG } from "src/constants";
 import { SimpleGit } from "src/gitManager/simpleGit";
+import { t } from "src/i18n";
 import type ObsidianGit from "src/main";
 import type { DiffViewState } from "src/types";
 
@@ -129,7 +130,9 @@ export default class DiffView extends ItemView {
                     });
                     div.createEl("br");
                     div.createSpan({
-                        text: "File not found: " + this.state.bFile,
+                        text: t("File not found: {file}", {
+                            file: this.state.bFile,
+                        }),
                     });
                 }
             } finally {

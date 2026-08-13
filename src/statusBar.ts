@@ -123,7 +123,7 @@ export class StatusBar {
 
         if (this.progress) {
             this.statusBarEl.ariaLabel = this.getProgressTooltip(
-                "Git operation in progress..."
+                t("Git operation in progress...")
             );
             setIcon(this.iconEl, this.getProgressIcon());
             this.displayProgressText();
@@ -136,28 +136,30 @@ export class StatusBar {
                 this.displayFromNow();
                 break;
             case GitOperation.commit:
-                this.statusBarEl.ariaLabel = "Committing changes...";
+                this.statusBarEl.ariaLabel = t("Committing changes...");
                 setIcon(this.iconEl, "git-commit");
                 this.textEl.empty();
                 this.statusBarEl.addClass(this.base + "commit");
                 break;
             case GitOperation.push:
-                this.statusBarEl.ariaLabel =
-                    this.getProgressTooltip("Pushing changes...");
+                this.statusBarEl.ariaLabel = this.getProgressTooltip(
+                    t("Pushing changes...")
+                );
                 setIcon(this.iconEl, "upload");
                 this.displayProgressText();
                 this.statusBarEl.addClass(this.base + "push");
                 break;
             case GitOperation.pull:
-                this.statusBarEl.ariaLabel =
-                    this.getProgressTooltip("Pulling changes...");
+                this.statusBarEl.ariaLabel = this.getProgressTooltip(
+                    t("Pulling changes...")
+                );
                 setIcon(this.iconEl, "download");
                 this.displayProgressText();
                 this.statusBarEl.addClass(this.base + "pull");
                 break;
             case GitOperation.fetch:
                 this.statusBarEl.ariaLabel = this.getProgressTooltip(
-                    "Fetching from remote..."
+                    t("Fetching from remote...")
                 );
                 setIcon(this.iconEl, "download");
                 this.displayProgressText();
@@ -165,14 +167,14 @@ export class StatusBar {
                 break;
             case GitOperation.checkout:
                 this.statusBarEl.ariaLabel = this.getProgressTooltip(
-                    "Checking out branch..."
+                    t("Checking out branch...")
                 );
                 setIcon(this.iconEl, "git-branch");
                 this.displayProgressText();
                 this.statusBarEl.addClass(this.base + "checkout");
                 break;
             default:
-                this.statusBarEl.ariaLabel = "Failed on initialization!";
+                this.statusBarEl.ariaLabel = t("Failed on initialization!");
                 setIcon(this.iconEl, "alert-triangle");
                 this.textEl.empty();
                 this.statusBarEl.addClass(this.base + "failed-init");
@@ -194,8 +196,8 @@ export class StatusBar {
         const stage = this.progress.stage ? `${this.progress.stage}: ` : "";
         if (this.progress.progress === undefined) {
             return this.progress.stage
-                ? `${this.progress.action}: ${this.progress.stage}...`
-                : `${this.progress.action}...`;
+                ? `${t(this.progress.action)}: ${this.progress.stage}...`
+                : `${t(this.progress.action)}...`;
         }
 
         const count =
@@ -203,17 +205,17 @@ export class StatusBar {
             this.progress.total !== undefined
                 ? ` (${this.progress.processed}/${this.progress.total})`
                 : "";
-        return `${this.progress.action}: ${stage}${Math.round(this.progress.progress)}%${count}`;
+        return `${t(this.progress.action)}: ${stage}${Math.round(this.progress.progress)}%${count}`;
     }
 
     private getCompactProgressText(): string {
         if (!this.progress) return "";
 
         if (this.progress.progress === undefined) {
-            return `${this.progress.action}...`;
+            return `${t(this.progress.action)}...`;
         }
 
-        return `${this.progress.action} ${Math.round(this.progress.progress)}%`;
+        return `${t(this.progress.action)} ${Math.round(this.progress.progress)}%`;
     }
 
     private getProgressIcon(): string {
