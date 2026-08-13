@@ -13,7 +13,7 @@
 
 ## 项目状态
 
-项目处于**规划阶段**：需求已梳理并确认，详见 [需求规格](.scratch/v1-core/spec.md)；尚未包含插件源码。
+项目处于 **v0.1 开发阶段**：已导入上游基线源码（v2.39.0）。需求规格见 [.scratch/v1-core/spec.md](.scratch/v1-core/spec.md)，上游基线见 [docs/upstream.md](./docs/upstream.md)。
 
 ## 开发路线图
 
@@ -36,7 +36,13 @@
 
 ## 本地开发
 
-开发命令将在 v0.1 脚手架建立后补充到本节，并同步固化在 [AGENTS.md](./AGENTS.md) 中。
+- 环境要求：Node ≥24、pnpm ≥11
+- `pnpm install`
+- `pnpm run dev`（开发构建，监听文件变化）
+- `pnpm run build`（生产构建，输出 `main.js`）
+- `pnpm run test`（单元测试）；`pnpm run all`（tsc + svelte-check + format + lint + test）
+
+跟进上游：`git fetch upstream && git merge upstream/master`，详见 [docs/upstream.md](./docs/upstream.md)。
 
 ## 许可证
 

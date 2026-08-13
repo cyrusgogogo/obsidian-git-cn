@@ -3,13 +3,13 @@
 ## 项目概览
 
 - 本仓库目标是**中文版 Obsidian Git 插件**：自动 commit / push / pull、远端变更检测、自动 merge 与冲突提示，面向中文用户，界面与文档完整中文化。
-- 上游参考：[obsidian-git](https://github.com/Vinzent03/obsidian-git)（MIT 许可）。
-- **当前状态：仅文档，尚无源码。** 在搭建任何实现之前，先按 README 的 v0.1 路线图建立插件脚手架，并把构建、测试命令固化到本文档的「常用命令」一节。
+- 上游（fork 来源）：[obsidian-git](https://github.com/Vinzent03/obsidian-git)（MIT 许可）。
+- **当前状态：v0.1 进行中。** 已导入上游基线源码（v2.39.0，基线见 `docs/upstream.md`），i18n 模块已搭骨架；全部用户可见文案的迁移见 `.scratch/v1-core/issues/01-*.md`。
 
 ## 功能硬性要求
 
 - 自动同步必须具备：手动触发、定时执行、启动时拉取、提交后自动推送四种触发方式，且均可独立开关。
-- 拉取合并策略可配置（merge / rebase / stash），合并前必须能够恢复现场：冲突或失败时不得丢弃用户任何本地修改。
+- 拉取策略可配置（merge 默认 / rebase / reset），stash 仅作拉取前暂存未提交改动的保护机制；合并前必须能够恢复现场：冲突或失败时不得丢弃用户任何本地修改。
 - 面向用户的文案一律使用中文；翻译键使用英文作为 key，不要以中文直接作为 key。
 
 ## 数据安全边界
@@ -20,14 +20,21 @@
 
 ## 开发约定
 
-- 语言与工具：TypeScript + Obsidian API，包管理使用 npm，Git 操作基于 simple-git。
+- 语言与工具：TypeScript + Obsidian API，包管理使用 pnpm（与上游一致，Node ≥24、pnpm ≥11），Git 操作基于 simple-git。
 - 代码标识符用英文，注释与文档用中文。
 - 面向用户的行为文案集中管理，禁止硬编码散落各处。
 - 插件运行时产物（如 `.obsidian/`、构建出的 `main.js`）按发布流程处理，源码提交中保持干净。
 
 ## 常用命令
 
-待 v0.1 脚手架落地后补充，包括安装依赖、开发构建、测试与签名命令。更新命令后同步刷新本节。
+- 安装依赖：`pnpm install`
+- 开发构建（监听）：`pnpm run dev`
+- 生产构建：`pnpm run build`（输出 `main.js`，已 gitignore）
+- 类型检查：`pnpm run tsc`；Svelte 检查：`pnpm run svelte`
+- 测试：`pnpm run test`；单文件：`pnpm run test -- tests/i18n.test.ts`
+- 静态检查：`pnpm run lint`；格式检查：`pnpm run format`
+- 全量检查：`pnpm run all`
+- 跟进上游：`git fetch upstream && git merge upstream/master`
 
 ## Code Review Rules
 
