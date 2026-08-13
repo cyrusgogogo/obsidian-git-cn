@@ -34,3 +34,17 @@
 - 检查 Git 操作路径：任何一处静默覆盖、丢改、或未做回滚保护的合并逻辑都应标记。
 - 检查中文化完整性：新增的用户可见文案必须有对应中文翻译，且以英文 key 引用。
 - 检查敏感信息：Token、密码、私有仓库地址不得出现在日志输出或错误提示中。
+
+## Agent skills
+
+### Issue tracker
+
+问题以 Markdown 文件形式存放在本仓库的 `.scratch/<feature>/` 下。见 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+五个标准 triage 角色直接使用同名标签字符串。见 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+单上下文布局：仓库根目录一个 `CONTEXT.md` + `docs/adr/`。见 `docs/agents/domain.md`。
