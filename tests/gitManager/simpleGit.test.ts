@@ -9,7 +9,11 @@ import { SimpleGit } from "../../src/gitManager/simpleGit";
 import { GitOperation, type GitProgress } from "../../src/types";
 import { withCleanup } from "../helpers/cleanup";
 import { createFakePlugin, type FakePlugin } from "../helpers/createFakePlugin";
-import { createRepoWithOrigin } from "../helpers/gitRepo";
+import {
+    cleanupTempDirectory,
+    createRepoWithOrigin,
+    createTempDirectory,
+} from "../helpers/gitRepo";
 
 function createManager(
     repoPath: string,
@@ -112,6 +116,31 @@ describe("SimpleGit.commit", () => {
         expect(await repo.unpushedCount()).toBe(1);
         expect(await repo.show("HEAD:note.md")).toBe("base\namended");
         expect(await repo.statusPorcelain()).toBe("");
+    });
+});
+
+describe("SimpleGit repository initialization", () => {
+    it("在全新仓库上允许创建空的初始提交", async () => {
+        const dir = createTempDirectory("obsidian-git-init-test-");
+        const git = simpleGit({
+            baseDir: dir,
+            config: ["core.quotepath=off"],
+        });
+        await git.init(false);
+        await git.addConfig("user.email", "test@example.com");
+        await git.addConfig("user.name", "Test User");
+
+        const plugin = createFakePlugin();
+        const manager = createManager(dir, git, plugin);
+
+        const changes = await manager.commitAll({
+            message: "Initial commit",
+            allowEmpty: true,
+        });
+
+        expect(changes).toBe(0);
+        expect((await git.log()).total).toBe(1);
+        cleanupTempDirectory(dir);
     });
 });
 

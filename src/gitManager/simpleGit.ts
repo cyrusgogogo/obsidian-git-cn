@@ -548,7 +548,13 @@ export class SimpleGit extends GitManager {
         return this.git.raw(args).then((x) => x.trim() !== "");
     }
 
-    async commitAll({ message }: { message: string }): Promise<number> {
+    async commitAll({
+        message,
+        allowEmpty,
+    }: {
+        message: string;
+        allowEmpty?: boolean;
+    }): Promise<number> {
         return this.withGitOperation(GitOperation.commit, async () => {
             if (this.plugin.settings.updateSubmodules) {
                 const submodulePaths = await this.getSubmodulePaths();
@@ -562,7 +568,8 @@ export class SimpleGit extends GitManager {
             await this.git.add("-A");
 
             const res = await this.git.commit(
-                await this.formatCommitMessage(message)
+                await this.formatCommitMessage(message),
+                allowEmpty ? ["--allow-empty"] : []
             );
             this.app.workspace.trigger("obsidian-git:head-change");
             return res.summary.changes;

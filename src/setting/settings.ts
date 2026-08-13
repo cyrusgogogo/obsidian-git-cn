@@ -35,6 +35,8 @@ const FORMAT_STRING_REFERENCE_URL =
     "https://momentjs.com/docs/#/parsing/string-format/";
 const LINE_AUTHOR_FEATURE_WIKI_LINK =
     "https://publish.obsidian.md/git-doc/Line+Authoring";
+const AUTHENTICATION_GUIDE_URL =
+    "https://git.myyouqing.top/cyrusgit/obsidian-git-cn/raw/branch/master/docs/Authentication.zh.md";
 
 export class ObsidianGitSettingsTab extends PluginSettingTab {
     lineAuthorColorSettings: Map<"oldest" | "newest", Setting> = new Map();
@@ -93,6 +95,75 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
 
         // ===== 仓库与远端 =====
         new Setting(containerEl).setName(t("Repository & Remote")).setHeading();
+
+        new Setting(containerEl)
+            .setName(t("Initialize repository"))
+            .setDesc(
+                t(
+                    "Create a Git repository for this vault and an initial commit."
+                )
+            )
+            .addButton((button) =>
+                button.setButtonText(t("Initialize repository")).onClick(() => {
+                    plugin.createNewRepo().catch((e) => plugin.displayError(e));
+                })
+            );
+
+        new Setting(containerEl)
+            .setName(t("Clone repository"))
+            .setDesc(t("Clone an existing remote repository into this vault."))
+            .addButton((button) =>
+                button.setButtonText(t("Clone repository")).onClick(() => {
+                    plugin.cloneNewRepo().catch((e) => plugin.displayError(e));
+                })
+            );
+
+        const remoteSetting = new Setting(containerEl)
+            .setName(t("Remote"))
+            .setDesc(t("No remote configured"))
+            .addButton((button) =>
+                button.setButtonText(t("Manage remotes")).onClick(() => {
+                    plugin
+                        .editRemotes()
+                        .catch((e) => plugin.displayError(e))
+                        .finally(() => this.refreshDisplayWithDelay());
+                })
+            );
+        if (plugin.gitReady) {
+            void plugin.gitManager
+                .getRemotes()
+                .then(async (remotes) => {
+                    if (remotes.length > 0) {
+                        const urls = await Promise.all(
+                            remotes.map((name) =>
+                                plugin.gitManager.getRemoteUrl(name)
+                            )
+                        );
+                        remoteSetting.descEl.setText(
+                            remotes
+                                .map(
+                                    (name, index) =>
+                                        `${name}: ${urls[index] ?? ""}`
+                                )
+                                .join("\n")
+                        );
+                    }
+                })
+                .catch(() => undefined);
+        }
+
+        new Setting(containerEl)
+            .setName(t("Authentication"))
+            .setDesc(
+                t(
+                    "Credentials are handled by the system Git credential helper; the plugin never stores passwords."
+                )
+            )
+            .addButton((button) =>
+                button
+                    .setButtonText(t("Open guide"))
+                    .onClick(() => window.open(AUTHENTICATION_GUIDE_URL))
+            );
 
         new Setting(containerEl)
             .setName(t("Custom base path (Git repository path)"))

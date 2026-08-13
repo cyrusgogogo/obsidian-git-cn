@@ -646,7 +646,11 @@ export default class ObsidianGit extends Plugin {
     async createNewRepo() {
         try {
             await this.gitManager.init();
-            new Notice("Initialized new repo");
+            await this.gitManager.commitAll({
+                message: t("Initial commit"),
+                allowEmpty: true,
+            });
+            new Notice(t("Initialized new repo"));
             await this.init({ fromReload: true });
         } catch (e) {
             this.displayError(e);
@@ -655,18 +659,19 @@ export default class ObsidianGit extends Plugin {
 
     async cloneNewRepo() {
         const modal = new GeneralModal(this, {
-            placeholder: "Enter remote URL",
+            placeholder: t("Enter remote URL"),
         });
         const url = await modal.openAndGetResult();
         if (url) {
-            const confirmOption = "Vault Root";
+            const confirmOption = t("Vault Root");
             let dir = await new GeneralModal(this, {
                 options:
                     this.gitManager instanceof IsomorphicGit
                         ? [confirmOption]
                         : [],
-                placeholder:
-                    "Enter directory for clone. It needs to be empty or not existent.",
+                placeholder: t(
+                    "Enter directory for clone. It needs to be empty or not existent."
+                ),
                 allowEmpty: this.gitManager instanceof IsomorphicGit,
             }).openAndGetResult();
             if (dir == undefined) return;
@@ -682,19 +687,26 @@ export default class ObsidianGit extends Plugin {
             if (dir === ".") {
                 const modal = new GeneralModal(this, {
                     options: ["NO", "YES"],
-                    placeholder: `Does your remote repo contain a ${this.app.vault.configDir} directory at the root?`,
+                    placeholder: t(
+                        "Does your remote repo contain a {dir} directory at the root?",
+                        { dir: this.app.vault.configDir }
+                    ),
                     onlySelection: true,
                 });
                 const containsConflictDir = await modal.openAndGetResult();
                 if (containsConflictDir === undefined) {
-                    new Notice("Aborted clone");
+                    new Notice(t("Aborted clone"));
                     return;
                 } else if (containsConflictDir === "YES") {
-                    const confirmOption =
-                        "DELETE ALL YOUR LOCAL CONFIG AND PLUGINS";
+                    const confirmOption = t(
+                        "DELETE ALL YOUR LOCAL CONFIG AND PLUGINS"
+                    );
                     const modal = new GeneralModal(this, {
-                        options: ["Abort clone", confirmOption],
-                        placeholder: `To avoid conflicts, the local ${this.app.vault.configDir} directory needs to be deleted.`,
+                        options: [t("Abort clone"), confirmOption],
+                        placeholder: t(
+                            "To avoid conflicts, the local {dir} directory needs to be deleted.",
+                            { dir: this.app.vault.configDir }
+                        ),
                         onlySelection: true,
                     });
                     const shouldDelete =
@@ -705,30 +717,31 @@ export default class ObsidianGit extends Plugin {
                             true
                         );
                     } else {
-                        new Notice("Aborted clone");
+                        new Notice(t("Aborted clone"));
                         return;
                     }
                 }
             }
             const depth = await new GeneralModal(this, {
-                placeholder:
-                    "Specify depth of clone. Leave empty for full clone.",
+                placeholder: t(
+                    "Specify depth of clone. Leave empty for full clone."
+                ),
                 allowEmpty: true,
             }).openAndGetResult();
             let depthInt = undefined;
             if (depth === undefined) {
-                new Notice("Aborted clone");
+                new Notice(t("Aborted clone"));
                 return;
             }
 
             if (depth !== "") {
                 depthInt = parseInt(depth);
                 if (isNaN(depthInt)) {
-                    new Notice("Invalid depth. Aborting clone.");
+                    new Notice(t("Invalid depth. Aborting clone."));
                     return;
                 }
             }
-            new Notice(`Cloning new repo into "${dir}"`);
+            new Notice(t('Cloning new repo into "{dir}"', { dir }));
             const oldBase = this.settings.basePath;
             const customDir = dir && dir !== ".";
             //Set new base path before clone to ensure proper .git/index file location in isomorphic-git
@@ -741,8 +754,8 @@ export default class ObsidianGit extends Plugin {
                     dir,
                     depthInt
                 );
-                new Notice("Cloned new repo.");
-                new Notice("Please restart Obsidian");
+                new Notice(t("Cloned new repo."));
+                new Notice(t("Please restart Obsidian"));
 
                 if (customDir) {
                     await this.saveSettings();
@@ -1480,8 +1493,9 @@ I strongly recommend to use "Source mode" for viewing the conflicted files. For 
 
         const nameModal = new GeneralModal(this, {
             options: remotes,
-            placeholder:
-                "Select or create a new remote by typing its name and selecting it",
+            placeholder: t(
+                "Select or create a new remote by typing its name and selecting it"
+            ),
         });
         const remoteName = await nameModal.openAndGetResult();
 
@@ -1490,7 +1504,7 @@ I strongly recommend to use "Source mode" for viewing the conflicted files. For 
 
             const urlModal = new GeneralModal(this, {
                 initialValue: oldUrl,
-                placeholder: "Enter remote URL",
+                placeholder: t("Enter remote URL"),
             });
             // urlModal.inputEl.setText(oldUrl ?? "");
             const remoteURL = await urlModal.openAndGetResult();
@@ -1517,8 +1531,9 @@ I strongly recommend to use "Source mode" for viewing the conflicted files. For 
 
         const nameModal = new GeneralModal(this, {
             options: remotes,
-            placeholder:
-                "Select or create a new remote by typing its name and selecting it",
+            placeholder: t(
+                "Select or create a new remote by typing its name and selecting it"
+            ),
         });
         const remoteName =
             selectedRemote ?? (await nameModal.openAndGetResult());
@@ -1530,8 +1545,9 @@ I strongly recommend to use "Source mode" for viewing the conflicted files. For 
                 await this.gitManager.getRemoteBranches(remoteName);
             const branchModal = new GeneralModal(this, {
                 options: branches,
-                placeholder:
-                    "Select or create a new remote branch by typing its name and selecting it",
+                placeholder: t(
+                    "Select or create a new remote branch by typing its name and selecting it"
+                ),
             });
             const branch = await branchModal.openAndGetResult();
             if (branch == undefined) return undefined;
@@ -1551,7 +1567,7 @@ I strongly recommend to use "Source mode" for viewing the conflicted files. For 
 
         const nameModal = new GeneralModal(this, {
             options: remotes,
-            placeholder: "Select a remote",
+            placeholder: t("Select a remote"),
         });
         const remoteName = await nameModal.openAndGetResult();
 

@@ -120,6 +120,44 @@ const zh: Record<string, string> = {
     "Resumed automatic routines.": "已恢复自动任务。",
 
     // 仓库与远端
+    "Initialize repository": "初始化仓库",
+    "Create a Git repository for this vault and an initial commit.":
+        "为本 Vault 创建 Git 仓库与初始提交。",
+    "Clone repository": "克隆仓库",
+    "Clone an existing remote repository into this vault.":
+        "把现有远端仓库克隆到本 Vault。",
+    Remote: "远端",
+    "No remote configured": "尚未配置远端",
+    "Manage remotes": "管理远端",
+    Authentication: "认证",
+    "Credentials are handled by the system Git credential helper; the plugin never stores passwords.":
+        "认证交给系统 Git 凭据助手，插件不保存任何密码。",
+    "Open guide": "查看说明",
+    "Initial commit": "初始提交",
+    "Initialized new repo": "已初始化新仓库",
+    "Enter remote URL": "输入远端 URL",
+    "Enter directory for clone. It needs to be empty or not existent.":
+        "输入克隆目录。目录需要为空或不存在。",
+    "Vault Root": "Vault 根目录",
+    "Does your remote repo contain a {dir} directory at the root?":
+        "远端仓库根目录是否包含 {dir} 目录？",
+    "DELETE ALL YOUR LOCAL CONFIG AND PLUGINS": "删除全部本地配置与插件",
+    "Abort clone": "中止克隆",
+    "To avoid conflicts, the local {dir} directory needs to be deleted.":
+        "为避免冲突，需要删除本地 {dir} 目录。",
+    "Specify depth of clone. Leave empty for full clone.":
+        "指定克隆深度，留空表示完整克隆。",
+    "Aborted clone": "已中止克隆",
+    "Invalid depth. Aborting clone.": "深度无效，已中止克隆。",
+    'Cloning new repo into "{dir}"': "正在把新仓库克隆到「{dir}」",
+    "Cloned new repo.": "已克隆新仓库。",
+    "Please restart Obsidian": "请重启 Obsidian",
+    "Select or create a new remote by typing its name and selecting it":
+        "选择远端，或输入新名称创建远端",
+    "Select a remote": "选择远端",
+    "Select or create a new remote branch by typing its name and selecting it":
+        "选择远端分支，或输入新名称创建远端分支",
+    "Select branch to checkout": "选择要检出的分支",
     "Custom base path (Git repository path)": "自定义基础路径（Git 仓库路径）",
     'Sets the relative path to the vault from which the Git binary should be executed. Mostly used to set the path to the Git repository, which is only required if the Git repository is below the vault root directory. Use "\\" instead of "/" on Windows.':
         "设置 Git 命令相对 Vault 的执行路径。一般仅在 Git 仓库位于 Vault 根目录之下时需要。Windows 上请用 \\ 代替 /。",

@@ -40,6 +40,7 @@ export abstract class GitManager {
         status?: Status;
         unstagedFiles?: UnstagedFile[];
         amend?: boolean;
+        allowEmpty?: boolean;
     }): Promise<number | undefined>;
 
     abstract commit(_: {

@@ -216,10 +216,12 @@ export class IsomorphicGit extends GitManager {
         message,
         status,
         unstagedFiles,
+        allowEmpty: _allowEmpty,
     }: {
         message: string;
         status?: Status;
         unstagedFiles?: UnstagedFile[];
+        allowEmpty?: boolean;
     }): Promise<number | undefined> {
         try {
             await this.checkAuthorInfo();
