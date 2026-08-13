@@ -46,7 +46,7 @@
 
 ### Issue tracker
 
-问题以 Markdown 文件形式存放在本仓库的 `.scratch/<feature>/` 下。见 `docs/agents/issue-tracker.md`。
+问题跟踪在 GitHub Issues，所有操作统一使用 `gh` CLI。见 `docs/agents/issue-tracker.md`。
 
 ### Triage labels
 
