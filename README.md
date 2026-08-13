@@ -36,13 +36,38 @@
 -   帮助文档：[docs/zh/Start-Here.md](./docs/zh/Start-Here.md)
 -   发布前审计清单：[docs/zh/Release-Checklist.md](./docs/zh/Release-Checklist.md)
 
-## 本地开发
+## 构建与安装
 
--   环境要求：Node ≥24、pnpm ≥11
--   `pnpm install`
+### 1. 环境准备
+
+-   Node ≥24、pnpm ≥11。
+-   Windows 推荐 [nvm-windows](https://github.com/coreybutler/nvm-windows)：`nvm install 24 && nvm use 24`；也可从 [npmmirror 镜像](https://npmmirror.com/mirrors/node/)下载 Node 24 便携包，解压后把目录加入 `PATH`。
+-   pnpm：执行 `corepack enable pnpm`，或 `npm install -g pnpm@11`。国内网络可加 `--registry=https://registry.npmmirror.com`。
+
+### 2. 编译
+
+```bash
+pnpm install
+pnpm run build
+```
+
+构建产物为根目录下的 `main.js`（`manifest.json` 与 `styles.css` 为源文件，三者一起构成插件）。
+
+### 3. 安装到 Obsidian
+
+1. 在笔记库的 `<vault>/.obsidian/plugins/` 下新建 `obsidian-git-cn` 文件夹（`.obsidian` 是隐藏文件夹）。
+2. 把 `main.js`、`manifest.json`、`styles.css` 复制进去。
+3. 重启 Obsidian，打开「设置 → 第三方插件」，启用「Obsidian Git（中文版）」。
+4. 首次使用：命令面板执行「初始化新仓库」或「克隆现有远端仓库」，再用「编辑远端」绑定你的仓库 URL；随后在终端执行一次 `git push` / `git pull`，让系统凭据助手记录你的个人令牌（插件不保存密码）。
+
+插件正式发布后可改由 BRAT 或社区插件市场安装。使用教程见 [docs/zh/Getting-Started.md](./docs/zh/Getting-Started.md)，认证配置见 [docs/Authentication.zh.md](./docs/Authentication.zh.md)。
+
+### 本地开发
+
 -   `pnpm run dev`（开发构建，监听文件变化）
 -   `pnpm run build`（生产构建，输出 `main.js`）
--   `pnpm run test`（单元测试）；`pnpm run all`（tsc + svelte-check + format + lint + test）
+-   `pnpm run test`（单元测试）
+-   `pnpm run all`（tsc + svelte-check + format + lint + test）
 
 跟进上游：`git fetch upstream && git merge upstream/master`，详见 [docs/upstream.md](./docs/upstream.md)。
 
