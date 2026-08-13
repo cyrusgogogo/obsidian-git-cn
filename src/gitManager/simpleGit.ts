@@ -15,6 +15,7 @@ import {
 } from "src/constants";
 import type { LineAuthorFollowMovement } from "src/editor/lineAuthor/model";
 import { GeneralModal } from "src/ui/modals/generalModal";
+import { t } from "src/i18n";
 import type ObsidianGit from "../main";
 import type {
     Blame,
@@ -678,7 +679,7 @@ export class SimpleGit extends GitManager {
                 const branchInfo = await this.branchInfo();
                 if (!branchInfo.current) {
                     this.plugin.displayError(
-                        "No current branch found. Cannot pull."
+                        t("No current branch found. Cannot pull.")
                     );
                     return undefined;
                 }
@@ -691,7 +692,9 @@ export class SimpleGit extends GitManager {
                     this.plugin.settings.updateSubmodules
                 ) {
                     this.plugin.log(
-                        "No tracking branch found. Ignoring pull of main repo and updating submodules only."
+                        t(
+                            "No tracking branch found. Ignoring pull of main repo and updating submodules only."
+                        )
                     );
                     return;
                 }
@@ -724,7 +727,10 @@ export class SimpleGit extends GitManager {
                             }
                         } catch (err) {
                             this.plugin.displayError(
-                                `Pull failed (${this.plugin.settings.syncMethod}): ${errorToString(err)}`
+                                t("Pull failed ({method}): {error}", {
+                                    method: this.plugin.settings.syncMethod,
+                                    error: errorToString(err),
+                                })
                             );
                             return;
                         }
@@ -738,7 +744,10 @@ export class SimpleGit extends GitManager {
                             await this.git.reset([]);
                         } catch (err) {
                             this.plugin.displayError(
-                                `Sync failed (${this.plugin.settings.syncMethod}): ${errorToString(err)}`
+                                t("Sync failed ({method}): {error}", {
+                                    method: this.plugin.settings.syncMethod,
+                                    error: errorToString(err),
+                                })
                             );
                         }
                     }

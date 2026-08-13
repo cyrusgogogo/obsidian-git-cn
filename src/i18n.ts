@@ -74,6 +74,12 @@ const zh: Record<string, string> = {
     "Go to previous hunk": "上一个块",
 
     // 同步通知与提示
+    "Protective commit before sync": "同步前的保护性提交",
+    "Pull failed ({method}): {error}": "拉取失败（{method}）：{error}",
+    "Sync failed ({method}): {error}": "同步失败（{method}）：{error}",
+    "No current branch found. Cannot pull.": "未找到当前分支，无法拉取。",
+    "No tracking branch found. Ignoring pull of main repo and updating submodules only.":
+        "未找到跟踪分支。忽略主仓库拉取，仅更新子模块。",
     "Pull: Everything is up-to-date": "拉取：已是最新",
     "You have conflicts in {n} file(s)": "你有 {n} 个文件存在冲突",
     "Cannot push. You have conflicts": "无法推送：存在冲突",

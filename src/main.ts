@@ -34,6 +34,7 @@ import { IsomorphicGit } from "./gitManager/isomorphicGit";
 import { SimpleGit } from "./gitManager/simpleGit";
 import { LocalStorageSettings } from "./setting/localStorageSettings";
 import { parseLocale, setLocale, t } from "./i18n";
+import { createProtectiveCommit } from "./pullProtection";
 import Tools from "./tools";
 import type {
     FileStatusResult,
@@ -1181,6 +1182,10 @@ export default class ObsidianGit extends Plugin {
         }
         try {
             this.log("Pulling....");
+            await createProtectiveCommit({
+                updateCachedStatus: () => this.updateCachedStatus(),
+                commitAll: (opts) => this.gitManager.commitAll(opts),
+            });
             const pulledFiles = (await this.gitManager.pull()) || [];
             this.setPluginState({ offlineMode: false });
 

@@ -261,6 +261,33 @@ describe("SimpleGit.pull", () => {
         );
     });
 
+    it("rebase 策略把本地提交变基到远端之上", async () => {
+        const repo = withCleanup(await createRepoWithOrigin());
+        repo.write("local.md", "local\n");
+        await repo.git.add("local.md");
+        await repo.git.commit("local commit");
+        await createRemoteCommit(repo);
+
+        const plugin = createFakePlugin();
+        plugin.settings.syncMethod = "rebase";
+        plugin.settings.mergeStrategy = "none";
+        const manager = createManager(repo.repoPath, repo.git, plugin);
+
+        const changes = await manager.pull();
+
+        expect(changes).toEqual([
+            {
+                path: "remote.md",
+                workingDir: "P",
+                vaultPath: "remote.md",
+            },
+        ]);
+        expect(await repo.headMessage()).toBe("local commit");
+        expect(await repo.show("HEAD:remote.md")).toBe("remote");
+        expect(await repo.show("HEAD:local.md")).toBe("local");
+        expect(await repo.mergeCommitCount()).toBe(0);
+    });
+
     it("reports an error when no current branch is checked out", async () => {
         const repo = withCleanup(await createRepoWithOrigin());
         const fetch = vi.fn().mockResolvedValue(undefined);
@@ -279,7 +306,7 @@ describe("SimpleGit.pull", () => {
 
         expect(changes).toBeUndefined();
         expect(plugin.displayError).toHaveBeenCalledWith(
-            "No current branch found. Cannot pull."
+            "未找到当前分支，无法拉取。"
         );
         expect(fetch).not.toHaveBeenCalled();
         expect(plugin.setPluginState.mock.calls).toEqual([
@@ -301,7 +328,7 @@ describe("SimpleGit.pull", () => {
         expect(changes).toBeUndefined();
         expect(await repo.head()).toBe(headBefore);
         expect(plugin.log).toHaveBeenCalledWith(
-            "No tracking branch found. Ignoring pull of main repo and updating submodules only."
+            "未找到跟踪分支。忽略主仓库拉取，仅更新子模块。"
         );
         expect(plugin.app.workspace.trigger).not.toHaveBeenCalled();
     });
