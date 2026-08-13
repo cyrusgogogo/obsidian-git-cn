@@ -1,6 +1,7 @@
 import { setIcon, moment } from "obsidian";
 import { t } from "./i18n";
 import type ObsidianGit from "./main";
+import { formatRemoteStatus } from "./remoteState";
 import { GitOperation, type GitProgress } from "./types";
 
 interface StatusBarMessage {
@@ -232,19 +233,35 @@ export class StatusBar {
     private displayFromNow(): void {
         const timestamp = this.lastCommitTimestamp;
         const offlineMode = this.plugin.state.offlineMode;
+        const unpushed = this.unPushedCommits ?? 0;
+        const remoteStatus = formatRemoteStatus({
+            ahead: this.plugin.cachedStatus?.ahead ?? 0,
+            behind: this.plugin.cachedStatus?.behind ?? 0,
+            unpushed,
+        });
         if (timestamp) {
             const fromNow = moment(timestamp).fromNow();
-            this.statusBarEl.ariaLabel = `${
-                offlineMode ? "Offline: " : ""
-            }Last Commit: ${fromNow}`;
+            this.statusBarEl.ariaLabel = `${offlineMode ? `${t("Offline: ")}` : ""}${t(
+                "Last Commit: {time}",
+                { time: fromNow }
+            )}`;
 
-            if ((this.unPushedCommits ?? 0) > 0) {
-                this.statusBarEl.ariaLabel += `\n(${this.unPushedCommits} unpushed commits)`;
+            if (unpushed > 0) {
+                this.statusBarEl.ariaLabel += `\n(${t("{n} unpushed commits", {
+                    n: unpushed,
+                })})`;
             }
+            this.statusBarEl.ariaLabel += `\n${t(
+                "Local {ahead} ahead / {behind} behind",
+                {
+                    ahead: this.plugin.cachedStatus?.ahead ?? 0,
+                    behind: this.plugin.cachedStatus?.behind ?? 0,
+                }
+            )}`;
         } else {
             this.statusBarEl.ariaLabel = offlineMode
-                ? "Git is offline"
-                : "Git is ready";
+                ? t("Git is offline")
+                : t("Git is ready");
         }
 
         if (offlineMode) {
@@ -257,15 +274,17 @@ export class StatusBar {
             this.plugin.cachedStatus
         ) {
             this.textEl.setText(
-                this.plugin.cachedStatus.changed.length.toString()
+                `${remoteStatus} · ${this.plugin.cachedStatus.changed.length}✎`
             );
         } else {
-            this.textEl.empty();
+            this.textEl.setText(remoteStatus);
         }
         this.statusBarEl.addClass(this.base + "idle");
     }
 
     private async refreshCommitTimestamp() {
+        if (!this.plugin.gitReady) return;
+        await this.plugin.updateCachedStatus();
         this.lastCommitTimestamp =
             await this.plugin.gitManager.getLastCommitTime();
         this.unPushedCommits =

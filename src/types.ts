@@ -116,6 +116,12 @@ export interface Status {
     changed: FileStatusResult[];
     staged: FileStatusResult[];
 
+    /**
+     * 本地相对跟踪分支领先 / 落后的提交数（仅 SimpleGit 提供）。
+     */
+    ahead?: number;
+    behind?: number;
+
     /*
      * Only available for `SimpleGit` gitManager
      */

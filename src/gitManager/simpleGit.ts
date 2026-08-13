@@ -409,6 +409,8 @@ export class SimpleGit extends GitManager {
             staged: allFilesFormatted.filter(
                 (e) => e.index !== " " && e.index != "U"
             ),
+            ahead: status.ahead ?? 0,
+            behind: status.behind ?? 0,
             conflicted: status.conflicted.map(
                 (path) => this.formatPath({ path }).path
             ),

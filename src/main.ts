@@ -35,6 +35,7 @@ import { SimpleGit } from "./gitManager/simpleGit";
 import { LocalStorageSettings } from "./setting/localStorageSettings";
 import { parseLocale, setLocale, t } from "./i18n";
 import { createProtectiveCommit } from "./pullProtection";
+import { describeRemoteState } from "./remoteState";
 import Tools from "./tools";
 import type {
     FileStatusResult,
@@ -810,7 +811,21 @@ export default class ObsidianGit extends Plugin {
             }
         }
 
+        await this.notifyRemoteState();
         this.app.workspace.trigger("obsidian-git:refresh");
+    }
+
+    /** 依据领先/落后数量发出中文通知（见 spec FR-10）。 */
+    async notifyRemoteState(): Promise<void> {
+        if (!(await this.isAllInitialized())) return;
+        const status = await this.updateCachedStatus();
+        const notice = describeRemoteState(
+            status.ahead ?? 0,
+            status.behind ?? 0
+        );
+        if (notice) {
+            this.displayMessage(t(notice.key, notice.params));
+        }
     }
 
     async commitAndSync({
@@ -1220,6 +1235,7 @@ export default class ObsidianGit extends Plugin {
 
             this.displayMessage(t("Fetched from remote"));
             this.setPluginState({ offlineMode: false });
+            await this.notifyRemoteState();
             this.app.workspace.trigger("obsidian-git:refresh");
         } catch (error) {
             this.displayError(error);

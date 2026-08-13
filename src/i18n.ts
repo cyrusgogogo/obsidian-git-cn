@@ -74,6 +74,17 @@ const zh: Record<string, string> = {
     "Go to previous hunk": "上一个块",
 
     // 同步通知与提示
+    "Local and remote have diverged ({ahead} ahead / {behind} behind)":
+        "本地与远端已分叉（本地领先 {ahead} 个提交、落后 {behind} 个提交）",
+    "Remote is ahead by {n} commit(s). Pull to get the latest changes.":
+        "远端有 {n} 个新提交，建议拉取。",
+    "Offline: ": "离线：",
+    "Last Commit: {time}": "最近提交：{time}",
+    "{n} unpushed commits": "{n} 个未推送提交",
+    "Local {ahead} ahead / {behind} behind":
+        "本地领先 {ahead} 个提交，落后 {behind} 个提交",
+    "Git is offline": "Git 处于离线状态",
+    "Git is ready": "Git 已就绪",
     "You have merge conflicts. Resolve them and commit afterwards.":
         "存在合并冲突。请解决后提交。",
     "# Conflicts": "# 冲突",
