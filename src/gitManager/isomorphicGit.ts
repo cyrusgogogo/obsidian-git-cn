@@ -12,6 +12,7 @@ import type {
 import git, { Errors, readBlob } from "isomorphic-git";
 import { normalizePath, Notice, requestUrl } from "obsidian";
 import type ObsidianGit from "../main";
+import { t } from "src/i18n";
 import type {
     BranchInfo,
     FileStatusResult,
@@ -85,12 +86,11 @@ export class IsomorphicGit extends GitManager {
                     "Authentication failed. Please try with different credentials"
                 );
                 const username = await new GeneralModal(this.plugin, {
-                    placeholder: "Specify your username",
+                    placeholder: t("Specify your username"),
                 }).openAndGetResult();
                 if (username) {
                     const password = await new GeneralModal(this.plugin, {
-                        placeholder:
-                            "Specify your password/personal access token",
+                        placeholder: t("Specify your password or token"),
                         obscure: true,
                     }).openAndGetResult();
                     if (password) {

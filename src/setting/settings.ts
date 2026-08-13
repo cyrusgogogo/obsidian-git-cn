@@ -36,7 +36,7 @@ const FORMAT_STRING_REFERENCE_URL =
 const LINE_AUTHOR_FEATURE_WIKI_LINK =
     "https://publish.obsidian.md/git-doc/Line+Authoring";
 const AUTHENTICATION_GUIDE_URL =
-    "https://git.myyouqing.top/cyrusgit/obsidian-git-cn/raw/branch/master/docs/Authentication.zh.md";
+    "https://raw.githubusercontent.com/cyrusgogogo/obsidian-git-cn/master/docs/Authentication.zh.md";
 
 export class ObsidianGitSettingsTab extends PluginSettingTab {
     lineAuthorColorSettings: Map<"oldest" | "newest", Setting> = new Map();

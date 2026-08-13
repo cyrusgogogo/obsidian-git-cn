@@ -236,6 +236,8 @@ const zh: Record<string, string> = {
     "Initial commit": "初始提交",
     "Initialized new repo": "已初始化新仓库",
     "Enter remote URL": "输入远端 URL",
+    "Specify your username": "输入用户名",
+    "Specify your password or token": "输入密码或访问令牌",
     "Enter directory for clone. It needs to be empty or not existent.":
         "输入克隆目录。目录需要为空或不存在。",
     "Vault Root": "Vault 根目录",
