@@ -74,6 +74,25 @@ const zh: Record<string, string> = {
     "Go to previous hunk": "上一个块",
 
     // 同步通知与提示
+    "You have merge conflicts. Resolve them and commit afterwards.":
+        "存在合并冲突。请解决后提交。",
+    "# Conflicts": "# 冲突",
+    "Please resolve them and commit them using the commands `Git: Commit all changes` followed by `Git: Push`":
+        "请解决冲突，然后用「提交全部改动」命令提交，再执行「推送」",
+    "(This file will automatically be deleted before commit)":
+        "（此文件会在提交前自动删除）",
+    "[[#Additional Instructions]] available below file list":
+        "[[#补充说明]] 见文件列表下方",
+    "- Not a file: {file}": "- 不是文件：{file}",
+    "# Additional Instructions": "# 补充说明",
+    'I strongly recommend to use "Source mode" for viewing the conflicted files. For simple conflicts, in each file listed above replace every occurrence of the following text blocks with the desired text.':
+        "强烈建议用「源码模式」查看冲突文件。对于简单冲突，把上面列出的每个文件中以下文本块的每一次出现替换为期望内容。",
+    "Open conflict file": "打开冲突文件",
+    "Abort conflicted sync": "中止冲突中的同步",
+    "No conflicts to abort": "没有需要中止的冲突",
+    "No merge or rebase in progress": "当前没有进行中的合并或变基",
+    "Aborted the conflicted sync. Your protective commit is still in history.":
+        "已中止冲突中的同步。同步前的保护性提交仍在历史中，可随时回滚。",
     "Protective commit before sync": "同步前的保护性提交",
     "Pull failed ({method}): {error}": "拉取失败（{method}）：{error}",
     "Sync failed ({method}): {error}": "同步失败（{method}）：{error}",

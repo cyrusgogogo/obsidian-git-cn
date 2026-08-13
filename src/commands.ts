@@ -1,5 +1,9 @@
-import { Notice, Platform, TFolder, WorkspaceLeaf } from "obsidian";
-import { HISTORY_VIEW_CONFIG, SOURCE_CONTROL_VIEW_CONFIG } from "./constants";
+import { Notice, Platform, TFile, TFolder, WorkspaceLeaf } from "obsidian";
+import {
+    CONFLICT_OUTPUT_FILE,
+    HISTORY_VIEW_CONFIG,
+    SOURCE_CONTROL_VIEW_CONFIG,
+} from "./constants";
 import { SimpleGit } from "./gitManager/simpleGit";
 import ObsidianGit from "./main";
 import { openHistoryInGitHub, openLineInGitHub } from "./openInGitHub";
@@ -411,6 +415,28 @@ export function addCommmands(plugin: ObsidianGit) {
                 plugin.displayError(e);
             }
         },
+    });
+
+    plugin.addCommand({
+        id: "open-conflict-file",
+        name: t("Open conflict file"),
+        checkCallback: (checking) => {
+            const file = app.vault.getAbstractFileByPath(CONFLICT_OUTPUT_FILE);
+            if (checking) {
+                return file instanceof TFile;
+            }
+            if (file instanceof TFile) {
+                void app.workspace.getLeaf(false).openFile(file);
+            }
+            return true;
+        },
+    });
+
+    plugin.addCommand({
+        id: "abort-conflict-recovery",
+        name: t("Abort conflicted sync"),
+        callback: () =>
+            plugin.abortConflictRecovery().catch((e) => plugin.displayError(e)),
     });
 
     plugin.addCommand({

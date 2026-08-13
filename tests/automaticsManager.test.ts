@@ -40,6 +40,7 @@ function createPlugin(overrides: Record<string, unknown> = {}): FakePlugin {
             getLastAutoBackup: () => null,
             getLastAutoPull: () => null,
             getLastAutoPush: () => null,
+            getConflict: () => false,
             setLastAutoBackup: vi.fn(),
             setLastAutoPull: vi.fn(),
             setLastAutoPush: vi.fn(),
@@ -125,5 +126,25 @@ describe("AutomaticsManager 四种触发", () => {
 
         await vi.advanceTimersByTimeAsync(1 * 60000);
         expect(plugin.commitAndSync).toHaveBeenCalledTimes(1);
+    });
+
+    it("存在冲突时暂停自动同步", async () => {
+        const plugin = createPlugin();
+        plugin.localStorage.getConflict = () => true;
+        const manager = new AutomaticsManager(plugin as unknown as ObsidianGit);
+        await manager.init();
+
+        expect(plugin.autoCommitDebouncer).toBeUndefined();
+    });
+
+    it("冲突期间重载不重启定时器", async () => {
+        const plugin = createPlugin();
+        plugin.localStorage.getConflict = () => true;
+        const manager = new AutomaticsManager(plugin as unknown as ObsidianGit);
+        await manager.init();
+
+        manager.reload("commit", "push", "pull");
+
+        expect(plugin.autoCommitDebouncer).toBeUndefined();
     });
 });

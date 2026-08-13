@@ -1,4 +1,5 @@
 import { setIcon, moment } from "obsidian";
+import { t } from "./i18n";
 import type ObsidianGit from "./main";
 import { GitOperation, type GitProgress } from "./types";
 
@@ -98,8 +99,9 @@ export class StatusBar {
 
         if (this.plugin.localStorage.getConflict()) {
             setIcon(this.conflictEl, "alert-circle");
-            this.conflictEl.ariaLabel =
-                "You have merge conflicts. Resolve them and commit afterwards.";
+            this.conflictEl.ariaLabel = t(
+                "You have merge conflicts. Resolve them and commit afterwards."
+            );
             this.conflictEl.style.marginRight = "5px";
             this.conflictEl.addClass(this.base + "conflict");
         } else {

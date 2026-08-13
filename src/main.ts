@@ -102,6 +102,7 @@ export default class ObsidianGit extends Plugin {
 
     async updateCachedStatus(): Promise<Status> {
         this.app.workspace.trigger("obsidian-git:loading-status");
+        const hadConflict = this.localStorage.getConflict();
         this.cachedStatus = await this.gitManager.status();
         if (this.cachedStatus.conflicted.length > 0) {
             this.localStorage.setConflict(true);
@@ -109,6 +110,11 @@ export default class ObsidianGit extends Plugin {
         } else {
             this.localStorage.setConflict(false);
             await this.branchBar?.display();
+        }
+
+        // 冲突解决后恢复自动同步
+        if (hadConflict && this.cachedStatus.conflicted.length === 0) {
+            this.automaticsManager.reload("commit", "push", "pull");
         }
 
         this.app.workspace.trigger(
@@ -1455,13 +1461,16 @@ export default class ObsidianGit extends Plugin {
 
     async handleConflict(conflicted?: string[]): Promise<void> {
         this.localStorage.setConflict(true);
+        this.automaticsManager.unload();
         let lines: string[] | undefined;
         if (conflicted !== undefined) {
             lines = [
-                "# Conflicts",
-                "Please resolve them and commit them using the commands `Git: Commit all changes` followed by `Git: Push`",
-                "(This file will automatically be deleted before commit)",
-                "[[#Additional Instructions]] available below file list",
+                t("# Conflicts"),
+                t(
+                    "Please resolve them and commit them using the commands `Git: Commit all changes` followed by `Git: Push`"
+                ),
+                t("(This file will automatically be deleted before commit)"),
+                t("[[#Additional Instructions]] available below file list"),
                 "",
                 ...conflicted.map((e) => {
                     const file = this.app.vault.getAbstractFileByPath(e);
@@ -1472,12 +1481,14 @@ export default class ObsidianGit extends Plugin {
                         );
                         return `- [[${link}]]`;
                     } else {
-                        return `- Not a file: ${e}`;
+                        return t("- Not a file: {file}", { file: e });
                     }
                 }),
                 `
-# Additional Instructions
-I strongly recommend to use "Source mode" for viewing the conflicted files. For simple conflicts, in each file listed above replace every occurrence of the following text blocks with the desired text.
+${t("# Additional Instructions")}
+${t(
+    'I strongly recommend to use "Source mode" for viewing the conflicted files. For simple conflicts, in each file listed above replace every occurrence of the following text blocks with the desired text.'
+)}
 
 \`\`\`diff
 <<<<<<< HEAD
@@ -1489,6 +1500,32 @@ I strongly recommend to use "Source mode" for viewing the conflicted files. For 
             ];
         }
         await this.tools.writeAndOpenFile(lines?.join("\n"));
+    }
+
+    /**
+     * 中止当前冲突中的合并/变基，恢复到同步前状态。
+     * 保护性提交仍留在历史中，可完整回滚。
+     */
+    async abortConflictRecovery(): Promise<void> {
+        if (!(await this.isAllInitialized())) return;
+        if (!(this.gitManager instanceof SimpleGit)) {
+            this.displayMessage(t("No conflicts to abort"));
+            return;
+        }
+        const status = await this.updateCachedStatus();
+        if (status.conflicted.length === 0) {
+            this.displayMessage(t("No conflicts to abort"));
+            return;
+        }
+        await this.gitManager.abortMergeOrRebase();
+        this.localStorage.setConflict(false);
+        await this.updateCachedStatus();
+        this.displayMessage(
+            t(
+                "Aborted the conflicted sync. Your protective commit is still in history."
+            )
+        );
+        this.app.workspace.trigger("obsidian-git:refresh");
     }
 
     async editRemotes(): Promise<string | undefined> {

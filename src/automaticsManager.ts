@@ -64,7 +64,12 @@ export default class AutomaticsManager {
      * Should only be used when settings are changed.
      */
     reload(...type: ("commit" | "push" | "pull")[]) {
-        if (this.plugin.localStorage.getPausedAutomatics()) return;
+        if (
+            this.plugin.localStorage.getPausedAutomatics() ||
+            this.plugin.localStorage.getConflict()
+        ) {
+            return;
+        }
 
         if (type.contains("commit")) {
             this.clearAutoCommitAndSync();
@@ -123,7 +128,8 @@ export default class AutomaticsManager {
     private get isAutomaticsDisabled(): boolean {
         return (
             !this.plugin.gitReady ||
-            this.plugin.localStorage.getPausedAutomatics()
+            this.plugin.localStorage.getPausedAutomatics() ||
+            this.plugin.localStorage.getConflict()
         );
     }
 

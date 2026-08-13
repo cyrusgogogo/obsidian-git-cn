@@ -332,6 +332,42 @@ describe("SimpleGit.pull", () => {
         );
         expect(plugin.app.workspace.trigger).not.toHaveBeenCalled();
     });
+
+    it("abortMergeOrRebase 中止冲突中的合并并恢复现场", async () => {
+        const repo = withCleanup(await createRepoWithOrigin());
+        repo.write("note.md", "local\n");
+        await repo.git.add("note.md");
+        await repo.git.commit("local change");
+
+        const remoteWorktreePath = path.join(repo.dir, "remote-worktree");
+        await simpleGit(repo.dir).raw([
+            "clone",
+            repo.remotePath,
+            remoteWorktreePath,
+        ]);
+        const remoteGit = simpleGit({
+            baseDir: remoteWorktreePath,
+            config: ["core.quotepath=off"],
+        });
+        await remoteGit.addConfig("user.email", "test@example.com");
+        await remoteGit.addConfig("user.name", "Test User");
+        writeFileSync(path.join(remoteWorktreePath, "note.md"), "remote\n");
+        await remoteGit.add("note.md");
+        await remoteGit.commit("remote change");
+        await remoteGit.push(["--quiet"]);
+
+        const plugin = createFakePlugin();
+        const manager = createManager(repo.repoPath, repo.git, plugin);
+
+        await repo.git.fetch(["origin"]);
+        await expect(repo.git.merge(["origin/main"])).rejects.toThrow();
+        expect(await repo.statusPorcelain()).toContain("UU");
+
+        await manager.abortMergeOrRebase();
+
+        expect(await repo.headMessage()).toBe("local change");
+        expect(await repo.statusPorcelain()).toBe("");
+    });
 });
 
 describe("SimpleGit.push", () => {

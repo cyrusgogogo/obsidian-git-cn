@@ -781,6 +781,33 @@ export class SimpleGit extends GitManager {
         });
     }
 
+    /**
+     * 中止当前进行中的合并或变基，恢复到冲突前状态。
+     * 同步前的保护性提交（若存在）仍留在历史中，可完整回滚。
+     */
+    async abortMergeOrRebase(): Promise<void> {
+        const gitDir = path.join(this.absoluteRepoPath, ".git");
+        if (await this.exists(path.join(gitDir, "MERGE_HEAD"))) {
+            await this.git.raw(["merge", "--abort"]);
+        } else if (
+            (await this.exists(path.join(gitDir, "rebase-merge"))) ||
+            (await this.exists(path.join(gitDir, "rebase-apply")))
+        ) {
+            await this.git.raw(["rebase", "--abort"]);
+        } else {
+            throw new Error(t("No merge or rebase in progress"));
+        }
+    }
+
+    private async exists(filepath: string): Promise<boolean> {
+        try {
+            await fsPromises.access(filepath);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     async push(): Promise<number | undefined | null> {
         return this.withGitOperation(GitOperation.push, async () => {
             try {
