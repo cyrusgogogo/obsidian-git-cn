@@ -85,6 +85,8 @@ const zh: Record<string, string> = {
         "本地领先 {ahead} 个提交，落后 {behind} 个提交",
     "Git is offline": "Git 处于离线状态",
     "Git is ready": "Git 已就绪",
+    "Git: Going into offline mode. Future network errors will no longer be displayed.":
+        "Git：进入离线模式。后续网络错误将不再重复提示。",
     "You have merge conflicts. Resolve them and commit afterwards.":
         "存在合并冲突。请解决后提交。",
     "# Conflicts": "# 冲突",

@@ -35,6 +35,7 @@ import { SimpleGit } from "./gitManager/simpleGit";
 import { LocalStorageSettings } from "./setting/localStorageSettings";
 import { parseLocale, setLocale, t } from "./i18n";
 import { createProtectiveCommit } from "./pullProtection";
+import { redactCredentials } from "./redaction";
 import { describeRemoteState } from "./remoteState";
 import Tools from "./tools";
 import type {
@@ -1688,7 +1689,9 @@ ${t(
     handleNoNetworkError(_: NoNetworkError): void {
         if (!this.state.offlineMode) {
             this.displayError(
-                "Git: Going into offline mode. Future network errors will no longer be displayed.",
+                t(
+                    "Git: Going into offline mode. Future network errors will no longer be displayed."
+                ),
                 2000
             );
         } else {
@@ -1726,12 +1729,16 @@ ${t(
         } else {
             error = new Error(String(data));
         }
+        const message = redactCredentials(error.message);
 
         if (this.settings.showErrorNotices) {
-            new Notice(error.message, timeout);
+            new Notice(message, timeout);
         }
-        console.error(`${this.manifest.id}:`, error.stack);
-        this.statusBar?.displayMessage(error.message.toLowerCase(), timeout);
+        console.error(
+            `${this.manifest.id}:`,
+            redactCredentials(error.stack ?? message)
+        );
+        this.statusBar?.displayMessage(message.toLowerCase(), timeout);
     }
 
     log(...data: unknown[]) {

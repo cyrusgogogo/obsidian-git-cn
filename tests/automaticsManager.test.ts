@@ -50,9 +50,15 @@ function createPlugin(overrides: Record<string, unknown> = {}): FakePlugin {
                 task: () => Promise<unknown>,
                 after?: (result: unknown) => void
             ) => {
-                const result = await task();
-                after?.(result);
-                return result;
+                try {
+                    const result = await task();
+                    after?.(result);
+                    return result;
+                } catch (error) {
+                    // 与真实 PromiseQueue 一致：失败也回调 onFinished
+                    after?.(undefined);
+                    return error;
+                }
             },
         },
         commitAndSync: vi.fn(),
@@ -146,5 +152,44 @@ describe("AutomaticsManager 四种触发", () => {
         manager.reload("commit", "push", "pull");
 
         expect(plugin.autoCommitDebouncer).toBeUndefined();
+    });
+
+    it("推送失败后按间隔自然重试，不产生重试风暴", async () => {
+        const plugin = createPlugin({
+            differentIntervalCommitAndPush: true,
+            autoPushInterval: 30,
+            autoSaveInterval: 0,
+        });
+        plugin.push = vi.fn().mockRejectedValue(new Error("offline"));
+        const manager = new AutomaticsManager(plugin as unknown as ObsidianGit);
+        await manager.init();
+
+        await vi.advanceTimersByTimeAsync(30 * 60000);
+        expect(plugin.push).toHaveBeenCalledTimes(1);
+
+        await vi.advanceTimersByTimeAsync(30 * 60000);
+        expect(plugin.push).toHaveBeenCalledTimes(2);
+
+        await vi.advanceTimersByTimeAsync(30 * 60000);
+        expect(plugin.push).toHaveBeenCalledTimes(3);
+    });
+
+    it("网络恢复后下一次定时推送成功", async () => {
+        const plugin = createPlugin({
+            differentIntervalCommitAndPush: true,
+            autoPushInterval: 30,
+            autoSaveInterval: 0,
+        });
+        plugin.push = vi
+            .fn()
+            .mockRejectedValueOnce(new Error("offline"))
+            .mockResolvedValueOnce(undefined);
+        const manager = new AutomaticsManager(plugin as unknown as ObsidianGit);
+        await manager.init();
+
+        await vi.advanceTimersByTimeAsync(30 * 60000);
+        await vi.advanceTimersByTimeAsync(30 * 60000);
+
+        expect(plugin.push).toHaveBeenCalledTimes(2);
     });
 });
