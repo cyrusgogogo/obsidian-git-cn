@@ -7,10 +7,12 @@
 -   [x] 仓库根目录有 `manifest.json`（`pnpm run build` 后生成 `main.js`，两者齐备即可被 BRAT 拉取）
 -   [x] `manifest.json` 的 `id` 为 `obsidian-git-cn`（不可再改，否则丢失用户配置）
 -   [x] `manifest.json` 的 `isDesktopOnly` 为 `true`
--   [ ] 正式打 tag 并生成 `versions.json`（首版可仅凭 `manifest.json` 安装，多版本发布时补充）
+-   [x] 已生成 `versions.json`（`1.0.0` → `1.13.1`）
+-   [ ] 发布时打 tag（如 `1.0.0`），push 后由 Release 工作流自动构建并创建 GitHub Release
 
 ## 元数据
 
+-   [x] `manifest.json` 已声明 `minAppVersion: 1.13.1`（实测最低 Obsidian 版本）
 -   [x] `author` 指向本 fork 维护者（xr）
 -   [x] `authorUrl` / `repository` 指向本 fork 仓库
 -   [x] 已移除上游作者的赞助链接
@@ -32,3 +34,13 @@
 -   [x] `pnpm run svelte`（svelte-check）通过
 -   [x] `pnpm run lint` 与 `pnpm run format` 通过
 -   [x] 单测通过；全量测试仅剩上游 8 个 Windows CRLF 已知失败（见 `docs/upstream.md`）
+
+## 官方社区市场（仅准备，暂不提交）
+
+-   [x] 市场文案就绪：名称「Obsidian Git（中文版）」、中文描述、`id=obsidian-git-cn`
+-   [x] `minAppVersion` 与 `versions.json` 就绪
+-   [x] GitHub Release 自动化就绪（tag 触发构建、zip、Release）
+-   [ ] 真实上架：向 obsidianmd/obsidian-releases 提交 PR（本次暂不执行）
+-   [ ] 上架前逐项满足官方审核要求（隐私说明、无广告、Release 资产、可复现构建等）
+
+暂以「安装脚本 + BRAT 试装」作为分发方式；官方市场 PR 待功能与反馈稳定后再提。

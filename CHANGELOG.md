@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+自本 fork 起，发布记录改用自有版本线；上游 2.39.0 及更早的历史保留在下方，仅供跟进比对。
+
+## [1.0.0](https://github.com/cyrusgogogo/obsidian-git-cn/releases/tag/1.0.0) (2026-08-13)
+
+首个中文版正式发布（以上游 [2.39.0](https://github.com/Vinzent03/obsidian-git/compare/2.38.6...2.39.0) 为基线）：
+
+- 界面与文档完整中文化，默认中文、可切换英文
+- 四种同步触发方式（手动、定时、启动时拉取、提交后推送），均可独立开关
+- 拉取策略 merge / rebase / reset，拉取前保护性提交，失败可完整回滚
+- 远端变更检测：状态栏领先 / 落后计数、分叉与落后通知
+- 冲突时暂停同步并给出中文提示，不丢弃任何本地修改
+- GitHub / Gitee 适配，凭据交由系统 Git 凭据助手保管，插件不保存密码
+
 ## [2.39.0](https://github.com/Vinzent03/obsidian-git/compare/2.38.6...2.39.0) (2026-08-12)
 
 

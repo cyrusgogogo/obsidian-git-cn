@@ -1,4 +1,4 @@
-# Obsidian Git CN（中文版）
+# Obsidian Git（中文版）
 
 面向中文用户的 Obsidian Git 插件：以 [obsidian-git](https://github.com/Vinzent03/obsidian-git)（MIT 许可）为上游的分叉，界面与文档完整中文化，提供开箱即用的 Git 备份与多设备同步。仅支持桌面端（Windows / macOS / Linux）。
 
@@ -59,7 +59,6 @@ pnpm run build
 
 ## 参与开发
 
--   需求规格：[.scratch/v1-core/spec.md](.scratch/v1-core/spec.md)
 -   术语表：[CONTEXT.md](CONTEXT.md)
 -   架构决策记录：[docs/adr/](docs/adr/)
 -   上游跟进：[docs/upstream.md](docs/upstream.md)

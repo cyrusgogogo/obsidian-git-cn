@@ -5,5 +5,6 @@
     "name": "Obsidian Git（中文版）",
     "description": "面向中文用户的 Obsidian Git 插件：自动提交、拉取、推送与合并，界面完整中文化。",
     "isDesktopOnly": true,
-    "version": "2.39.0"
+    "minAppVersion": "1.13.1",
+    "version": "1.0.0"
 }
