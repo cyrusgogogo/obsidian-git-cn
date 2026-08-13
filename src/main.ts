@@ -33,6 +33,7 @@ import type { GitManager } from "./gitManager/gitManager";
 import { IsomorphicGit } from "./gitManager/isomorphicGit";
 import { SimpleGit } from "./gitManager/simpleGit";
 import { LocalStorageSettings } from "./setting/localStorageSettings";
+import { parseLocale, setLocale } from "./i18n";
 import Tools from "./tools";
 import type {
     FileStatusResult,
@@ -525,6 +526,7 @@ export default class ObsidianGit extends Plugin {
             data = <ObsidianGitSettings>{ showedMobileNotice: true };
         }
         this.settings = mergeSettingsByPriority(DEFAULT_SETTINGS, data);
+        setLocale(parseLocale(this.settings.language));
     }
 
     async saveSettings() {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { getLocale, setLocale, t } from "src/i18n";
+import { getLocale, parseLocale, setLocale, t } from "src/i18n";
 
 afterEach(() => {
     setLocale("zh");
@@ -23,5 +23,18 @@ describe("i18n", () => {
 
     it("支持 {name} 参数替换", () => {
         expect(t("{n} commits", { n: 3 })).toBe("3 个提交");
+    });
+});
+
+describe("parseLocale", () => {
+    it("接受 en 与 zh", () => {
+        expect(parseLocale("en")).toBe("en");
+        expect(parseLocale("zh")).toBe("zh");
+    });
+
+    it("缺失或无效值回退到中文", () => {
+        expect(parseLocale(undefined)).toBe("zh");
+        expect(parseLocale(null)).toBe("zh");
+        expect(parseLocale("fr")).toBe("zh");
     });
 });

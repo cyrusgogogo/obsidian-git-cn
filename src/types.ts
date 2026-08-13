@@ -1,4 +1,5 @@
 import type { LineAuthorSettings } from "src/editor/lineAuthor/model";
+import type { Locale } from "./i18n";
 import type {
     Editor,
     EventRef,
@@ -9,6 +10,7 @@ import type {
 } from "obsidian";
 
 export interface ObsidianGitSettings {
+    language: Locale;
     commitMessage: string;
     autoCommitMessage: string;
     commitMessageScript: string;

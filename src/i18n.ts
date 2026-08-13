@@ -9,6 +9,8 @@
 export type Locale = "zh" | "en";
 
 const zh: Record<string, string> = {
+    Language: "语言",
+    "Display language of the plugin interface.": "插件界面的显示语言。",
     "Obsidian Git": "Obsidian Git（中文版）",
     Sync: "同步",
     "{n} commits": "{n} 个提交",
@@ -23,6 +25,11 @@ export function setLocale(locale: Locale): void {
 
 export function getLocale(): Locale {
     return currentLocale;
+}
+
+/** 解析持久化存储中的语言值；无效或缺失时回退到中文。 */
+export function parseLocale(value: unknown): Locale {
+    return value === "en" || value === "zh" ? value : "zh";
 }
 
 /**

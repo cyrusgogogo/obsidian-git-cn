@@ -30,6 +30,7 @@ import type {
     SyncMethod,
 } from "src/types";
 import { convertToRgb, formatMinutes, rgbToString } from "src/utils";
+import { parseLocale, setLocale, t } from "src/i18n";
 
 const FORMAT_STRING_REFERENCE_URL =
     "https://momentjs.com/docs/#/parsing/string-format/";
@@ -65,6 +66,23 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
         const gitReady = plugin.gitReady;
 
         containerEl.empty();
+
+        new Setting(containerEl)
+            .setName(t("Language"))
+            .setDesc(t("Display language of the plugin interface."))
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOption("zh", "中文")
+                    .addOption("en", "English")
+                    .setValue(plugin.settings.language)
+                    .onChange(async (value) => {
+                        plugin.settings.language = parseLocale(value);
+                        setLocale(plugin.settings.language);
+                        await plugin.saveSettings();
+                        this.refreshDisplayWithDelay();
+                    })
+            );
+
         if (!gitReady) {
             containerEl.createEl("p", {
                 text: "Git is not ready. When all settings are correct you can configure commit-sync, etc.",
