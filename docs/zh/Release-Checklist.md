@@ -8,7 +8,7 @@
 -   [x] `manifest.json` 的 `id` 为 `obsidian-git-cn`（不可再改，否则丢失用户配置）
 -   [x] `manifest.json` 的 `isDesktopOnly` 为 `true`
 -   [x] 已生成 `versions.json`（`1.0.0` → `1.13.1`）
--   [ ] 发布时打 tag（如 `1.0.0`），push 后由 Release 工作流自动构建并创建 GitHub Release
+-   [x] 已打 tag `1.0.0`，Release 工作流生成 zip 与 GitHub Release（含 `main.js` / `manifest.json` / `styles.css`）
 
 ## 元数据
 
