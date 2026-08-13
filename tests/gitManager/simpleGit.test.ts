@@ -368,6 +368,21 @@ describe("SimpleGit.pull", () => {
         expect(await repo.headMessage()).toBe("local change");
         expect(await repo.statusPorcelain()).toBe("");
     });
+
+    it("拉取不会改动 git 自身的 http.proxy 配置", async () => {
+        const repo = withCleanup(await createRepoWithOrigin());
+        await repo.git.addConfig("http.proxy", "http://proxy.example:8080");
+        const plugin = createFakePlugin();
+        plugin.settings.syncMethod = "merge";
+        plugin.settings.mergeStrategy = "none";
+        const manager = createManager(repo.repoPath, repo.git, plugin);
+
+        await manager.pull();
+
+        expect((await repo.git.getConfig("http.proxy")).value).toBe(
+            "http://proxy.example:8080"
+        );
+    });
 });
 
 describe("SimpleGit.push", () => {
