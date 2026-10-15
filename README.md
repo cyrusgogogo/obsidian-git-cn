@@ -10,6 +10,9 @@
 -   **自动合并与保护**：支持 merge（默认）/ rebase / reset 三种拉取策略；拉取前自动生成保护性提交，失败可完整回滚；冲突时暂停同步并给出中文提示。
 -   **中文界面与文档**：默认中文、可切换英文，设置面板、命令、通知、帮助文档全部中文化。
 -   **国内网络环境优化**：支持任意标准 Git URL，重点适配 GitHub 与 Gitee；认证走 HTTPS + 个人令牌，由系统 Git 凭据助手保管，插件不保存任何密码，也不影响 git 自身的 `http.proxy` 配置。
+-   **冲突与历史查看**：编辑器提供冲突块操作，源码控制视图可标记已解决；历史视图可打开指定提交中的文件。新增提交模式、差异超时和笔记库范围限制。
+
+当前源码已跟进上游 v2.41.1 及后续 `master` 修复，详情见[上游跟进](docs/upstream.md)。出于数据安全，子模块自动同步暂时禁用；变基冲突需在终端执行 `git rebase --continue`。切换语言后如已有视图或命令仍显示旧语言，请重载插件。
 
 ## 安装
 
@@ -66,6 +69,7 @@ pnpm run build
 -   [使用教程](docs/zh/Getting-Started.md)
 -   [认证说明（凭据助手）](docs/Authentication.zh.md)
 -   [常见问题与故障排查](docs/zh/Common-Issues.md)
+-   [解决同步冲突](docs/zh/Conflict-Resolution.md)
 -   [帮助文档索引](docs/zh/Start-Here.md)
 
 ## 参与开发

@@ -43,6 +43,11 @@ if (!Math.clamp) {
     });
 }
 
+Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: { debug: "-simple-git" },
+});
+
 Object.defineProperty(globalThis, "activeWindow", {
     configurable: true,
     get: () => globalThis,

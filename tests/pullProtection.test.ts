@@ -11,6 +11,8 @@ function createStatus(
         changed: all,
         staged: [],
         conflicted: [],
+        stagedOutsideVault: 0,
+        conflictedOutsideVault: 0,
     } as unknown as Status;
 }
 
@@ -46,7 +48,44 @@ describe("保护性提交", () => {
             })
         );
         expect(commitAll.mock.calls[0]![0]).toMatchObject({
-            unstagedFiles: status.changed,
+            unstagedFiles: [{ path: "note.md", type: "M" }],
+            protective: true,
+        });
+    });
+
+    it("库外已暂存文件也必须进入保护检查", async () => {
+        const status = createStatus([]);
+        status.stagedOutsideVault = 1;
+        const commitAll = vi
+            .fn()
+            .mockRejectedValue(new Error("scope rejected"));
+
+        await expect(
+            createProtectiveCommit({
+                updateCachedStatus: () => Promise.resolve(status),
+                commitAll,
+            })
+        ).rejects.toThrow("scope rejected");
+        expect(commitAll).toHaveBeenCalledWith(
+            expect.objectContaining({
+                protective: true,
+            })
+        );
+    });
+
+    it("删除文件保留正确类型，提交异常不视为保护成功", async () => {
+        const status = createStatus([
+            { path: "deleted.md", workingDir: "D", vaultPath: "deleted.md" },
+        ]);
+        const commitAll = vi.fn().mockRejectedValue(new Error("commit failed"));
+        await expect(
+            createProtectiveCommit({
+                updateCachedStatus: () => Promise.resolve(status),
+                commitAll,
+            })
+        ).rejects.toThrow("commit failed");
+        expect(commitAll.mock.calls[0]![0]).toMatchObject({
+            unstagedFiles: [{ path: "deleted.md", type: "D" }],
         });
     });
 });

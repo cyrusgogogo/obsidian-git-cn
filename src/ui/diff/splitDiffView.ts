@@ -1,6 +1,6 @@
 import type { Debouncer, ViewStateResult, WorkspaceLeaf } from "obsidian";
 import { debounce, ItemView, Platform, setIcon } from "obsidian";
-import { SPLIT_DIFF_VIEW_CONFIG } from "src/constants";
+import { DEFAULT_SETTINGS, SPLIT_DIFF_VIEW_CONFIG } from "src/constants";
 import { SimpleGit } from "src/gitManager/simpleGit";
 import { t } from "src/i18n";
 import type ObsidianGit from "src/main";
@@ -29,14 +29,43 @@ const readOnlyEditorTheme = EditorView.theme({
     },
 });
 
+const READ_ONLY_DIFF_TIMEOUT_FACTOR = 10;
+
+interface SaveTarget {
+    vaultPath: string;
+    savedContent: string;
+}
+
+interface PendingSave {
+    target: SaveTarget;
+    content: string;
+}
+
+export function getSplitDiffTimeout(
+    configuredTimeout: number,
+    editable: boolean
+): number {
+    const timeout =
+        Number.isInteger(configuredTimeout) && configuredTimeout > 0
+            ? configuredTimeout
+            : DEFAULT_SETTINGS.diffTimeout;
+    return editable ? timeout : timeout * READ_ONLY_DIFF_TIMEOUT_FACTOR;
+}
+
 // This class is not extending `FileView', because it needs a `TFile`, which is not possible for dot files like `.gitignore`, which this editor should support as well.`
 export default class SplitDiffView extends ItemView {
     refreshing = false;
     state!: DiffViewState;
     intervalRef: number;
     mergeView: MergeView | undefined;
-    fileSaveDebouncer!: Debouncer<[string], void>;
+    fileSaveDebouncer!: Debouncer<[], void>;
     bIsEditable!: boolean;
+    private indexUnmerged = false;
+    private pendingSave?: PendingSave;
+    private savePromise?: Promise<void>;
+    private workingTreeSaveTarget?: SaveTarget;
+    private editRevision = 0;
+    private closed = false;
 
     /**
      * Prevent to load text from file if the modification event was caused by this instance
@@ -51,7 +80,7 @@ export default class SplitDiffView extends ItemView {
         this.navigation = true;
         this.registerEvent(
             this.app.workspace.on("obsidian-git:status-changed", () => {
-                if (!this.mergeView) {
+                if (!this.mergeView || this.indexUnmerged) {
                     this.createMergeView().catch(console.error);
                 } else {
                     this.updateRefEditors().catch(console.error);
@@ -66,10 +95,7 @@ export default class SplitDiffView extends ItemView {
 
         this.registerEvent(
             this.app.vault.on("modify", (file) => {
-                if (
-                    this.state.bRef == undefined &&
-                    file.path === this.state.bFile
-                ) {
+                if (this.isWorkingTreeBFile(file.path)) {
                     if (this.ignoreNextModification) {
                         this.ignoreNextModification = false;
                     } else {
@@ -80,10 +106,7 @@ export default class SplitDiffView extends ItemView {
         );
         this.registerEvent(
             this.app.vault.on("delete", (file) => {
-                if (
-                    this.state.bRef == undefined &&
-                    file.path === this.state.bFile
-                ) {
+                if (this.isWorkingTreeBFile(file.path)) {
                     // If the file got deleted, we need to recreate the view to make the editor read-only
                     this.createMergeView().catch(console.error);
                 }
@@ -91,10 +114,7 @@ export default class SplitDiffView extends ItemView {
         );
         this.registerEvent(
             this.app.vault.on("create", (file) => {
-                if (
-                    this.state.bRef == undefined &&
-                    file.path === this.state.bFile
-                ) {
+                if (this.isWorkingTreeBFile(file.path)) {
                     // If the file got created, we need to recreate the view to make the editor editable
                     this.createMergeView().catch(console.error);
                 }
@@ -103,9 +123,8 @@ export default class SplitDiffView extends ItemView {
         this.registerEvent(
             this.app.vault.on("rename", (file, oldPath) => {
                 if (
-                    this.state.bRef == undefined &&
-                    (file.path === this.state.bFile ||
-                        oldPath === this.state.bFile)
+                    this.isWorkingTreeBFile(file.path) ||
+                    this.isWorkingTreeBFile(oldPath)
                 ) {
                     // If the file got created, we need to recreate the view to make the editor editable
                     this.createMergeView().catch(console.error);
@@ -114,20 +133,103 @@ export default class SplitDiffView extends ItemView {
         );
 
         this.fileSaveDebouncer = debounce(
-            (data: string) => {
-                const file = this.state.bFile;
-                if (file) {
-                    this.ignoreNextModification = true;
-                    this.plugin.app.vault.adapter
-                        .write(
-                            this.plugin.gitManager.getRelativeVaultPath(file),
-                            data
-                        )
-                        .catch((e) => this.plugin.displayError(e));
-                }
+            () => {
+                void this.flushPendingSave().catch((error) =>
+                    this.plugin.displayError(error)
+                );
             },
             1000,
             false
+        );
+    }
+
+    scheduleFileSave(target: SaveTarget, content: string): void {
+        this.editRevision++;
+        this.pendingSave = { target, content };
+        this.fileSaveDebouncer();
+    }
+
+    async flushPendingSave(): Promise<void> {
+        if (this.savePromise) {
+            await this.savePromise;
+            return this.flushPendingSave();
+        }
+        const pending = this.pendingSave;
+        if (!pending) return;
+        this.fileSaveDebouncer?.cancel();
+        this.savePromise = new Promise<void>((resolve, reject) => {
+            this.plugin.promiseQueue.addTask(async () => {
+                try {
+                    const { target, content } = pending;
+                    if (
+                        !target.vaultPath ||
+                        target.vaultPath.startsWith("/") ||
+                        target.vaultPath.startsWith("\\") ||
+                        /^[A-Za-z]:/.test(target.vaultPath) ||
+                        target.vaultPath.split(/[\\/]/).includes("..")
+                    ) {
+                        throw new Error(
+                            t("Cannot edit a file outside the vault.")
+                        );
+                    }
+                    const adapter = this.app.vault.adapter;
+                    // 队列内校验磁盘基线，禁止覆盖同步或外部编辑的新内容。
+                    const current = await adapter.read(target.vaultPath);
+                    if (current !== target.savedContent) {
+                        throw new Error(
+                            t(
+                                "The file changed outside the diff editor. Save was blocked; copy your unsaved edits before reloading."
+                            )
+                        );
+                    }
+                    this.ignoreNextModification = this.isWorkingTreeBFile(
+                        target.vaultPath
+                    );
+                    try {
+                        await adapter.write(target.vaultPath, content);
+                    } finally {
+                        this.ignoreNextModification = false;
+                    }
+                    target.savedContent = content;
+                    if (this.pendingSave === pending) {
+                        this.pendingSave = undefined;
+                    }
+                    resolve();
+                } catch (error) {
+                    reject(
+                        error instanceof Error
+                            ? error
+                            : new Error(
+                                  t("Could not save the diff editor changes.")
+                              )
+                    );
+                }
+            });
+        });
+        try {
+            await this.savePromise;
+        } finally {
+            this.savePromise = undefined;
+        }
+        await this.flushPendingSave();
+    }
+
+    /**
+     * Whether the given vault path is the working tree file shown on the b
+     * side. `bFile` is relative to the repository, which may differ from the
+     * vault root.
+     */
+    isWorkingTreeBFile(vaultPath: string): boolean {
+        if (
+            this.state?.bFile == undefined ||
+            this.state.bRef != undefined ||
+            !this.plugin.gitManager
+        ) {
+            return false;
+        }
+        return (
+            vaultPath ===
+            this.plugin.gitManager.getRelativeVaultPath(this.state.bFile)
         );
     }
 
@@ -141,16 +243,19 @@ export default class SplitDiffView extends ItemView {
             if (fileName?.endsWith(".md")) fileName = fileName.slice(0, -3);
             let suffix: string;
             if (this.state.bRef == undefined) {
-                suffix = " (Working Tree)";
+                suffix = t("Working Tree");
             } else if (this.state.bRef == "") {
-                suffix = " (Index)";
+                suffix = t("Index");
             } else {
-                suffix = "(" + this.state.bRef.substring(0, 7) + ")";
+                suffix = this.state.bRef.substring(0, 7);
             }
 
-            return `Diff: ${fileName} ${suffix}`;
+            return t("Diff: {file} ({ref})", {
+                file: fileName ?? this.state.bFile,
+                ref: suffix,
+            });
         }
-        return SPLIT_DIFF_VIEW_CONFIG.name;
+        return t(SPLIT_DIFF_VIEW_CONFIG.name);
     }
 
     getIcon(): string {
@@ -158,6 +263,7 @@ export default class SplitDiffView extends ItemView {
     }
 
     async setState(state: DiffViewState, _: ViewStateResult): Promise<void> {
+        await this.flushPendingSave();
         this.state = state;
 
         if (Platform.isMobile) {
@@ -173,12 +279,18 @@ export default class SplitDiffView extends ItemView {
         return this.state;
     }
 
-    onClose(): Promise<void> {
+    async onClose(): Promise<void> {
+        await this.flushPendingSave();
+        this.closed = true;
+        this.fileSaveDebouncer.cancel();
         window.clearInterval(this.intervalRef);
+        this.mergeView?.destroy();
+        this.mergeView = undefined;
         return super.onClose();
     }
 
     async onOpen(): Promise<void> {
+        this.closed = false;
         await this.createMergeView();
         return super.onOpen();
     }
@@ -192,6 +304,33 @@ export default class SplitDiffView extends ItemView {
             );
         } catch (error) {
             if (error instanceof GitError) {
+                if (
+                    commitHash === "" &&
+                    error.message.includes(
+                        "is in the index, but not at stage 0"
+                    )
+                ) {
+                    this.indexUnmerged = true;
+                    // An unmerged file has no stage 0 entry. Compare with our
+                    // side, or an empty file if our side deleted it.
+                    try {
+                        return await this.plugin.gitManager.show(
+                            ":2",
+                            file,
+                            false
+                        );
+                    } catch (stageError) {
+                        if (
+                            stageError instanceof GitError &&
+                            stageError.message.includes(
+                                "is in the index, but not at stage 2"
+                            )
+                        ) {
+                            return "";
+                        }
+                        throw stageError;
+                    }
+                }
                 if (
                     error.message.includes("does not exist") ||
                     error.message.includes("unknown revision or path") ||
@@ -210,37 +349,58 @@ export default class SplitDiffView extends ItemView {
         }
     }
 
-    async bShouldBeEditable(): Promise<boolean> {
-        if (this.state.bRef != undefined) {
+    async bShouldBeEditable(state = this.state): Promise<boolean> {
+        if (state.bRef != undefined) {
             return false;
         }
         const bVaultPath = this.plugin.gitManager.getRelativeVaultPath(
-            this.state.bFile
+            state.bFile
         );
         return await this.app.vault.adapter.exists(bVaultPath);
     }
 
     async updateModifiableEditor() {
         if (!this.mergeView || this.refreshing) return;
+        // 未保存的编辑不能被外部刷新替换；保存时会检查磁盘是否已变化。
+        if (this.pendingSave) return;
         const bEditor = this.mergeView.b;
+        const state = this.state;
+        const revision = this.editRevision;
 
         this.refreshing = true;
-        const newContent = await this.app.vault.adapter.read(this.state.bFile);
-        if (newContent != bEditor.state.doc.toString()) {
-            const transaction = bEditor.state.update({
-                changes: {
-                    from: 0,
-                    to: bEditor.state.doc.length,
-                    insert: newContent,
-                },
-                // The remote annotation is used to mark that change as external
-                // so the new state is not written back to the file, because it
-                // just came from the file system
-                annotations: [Transaction.remote.of(true)],
-            });
-            bEditor.dispatch(transaction);
+        try {
+            const newContent = await this.app.vault.adapter.read(
+                this.plugin.gitManager.getRelativeVaultPath(state.bFile)
+            );
+            if (
+                this.state !== state ||
+                this.mergeView?.b !== bEditor ||
+                this.editRevision !== revision ||
+                this.pendingSave
+            ) {
+                return;
+            }
+            if (newContent != bEditor.state.doc.toString()) {
+                if (this.workingTreeSaveTarget) {
+                    this.workingTreeSaveTarget.savedContent = newContent;
+                }
+                const transaction = bEditor.state.update({
+                    changes: {
+                        from: 0,
+                        to: bEditor.state.doc.length,
+                        insert: newContent,
+                    },
+                    // 标记外部刷新，避免将磁盘内容再次写回。
+                    annotations: [Transaction.remote.of(true)],
+                });
+                bEditor.dispatch(transaction);
+            }
+        } finally {
+            this.refreshing = false;
+            if (!this.closed && this.state !== state) {
+                await this.createMergeView();
+            }
         }
-        this.refreshing = false;
     }
 
     /**
@@ -251,37 +411,49 @@ export default class SplitDiffView extends ItemView {
         if (!this.mergeView || this.refreshing) return;
         const aEditor = this.mergeView.a;
         const bEditor = this.mergeView.b;
+        const state = this.state;
 
         this.refreshing = true;
+        try {
+            const aText = await this.gitShow(state.aRef, state.aFile);
 
-        const aText = await this.gitShow(this.state.aRef, this.state.aFile);
+            let bText: string | undefined;
+            if (state.bRef != undefined) {
+                bText = await this.gitShow(state.bRef, state.bFile);
+            }
+            if (this.state !== state || this.mergeView?.a !== aEditor) return;
+            if (this.indexUnmerged) {
+                this.refreshing = false;
+                await this.createMergeView();
+                return;
+            }
+            if (aText != aEditor.state.doc.toString()) {
+                const aTransaction = aEditor.state.update({
+                    changes: {
+                        from: 0,
+                        to: aEditor.state.doc.length,
+                        insert: aText,
+                    },
+                });
+                aEditor.dispatch(aTransaction);
+            }
 
-        let bText: string | undefined;
-        if (this.state.bRef != undefined) {
-            bText = await this.gitShow(this.state.bRef, this.state.bFile);
+            if (bText != undefined && bText != bEditor.state.doc.toString()) {
+                const bTransaction = bEditor.state.update({
+                    changes: {
+                        from: 0,
+                        to: bEditor.state.doc.length,
+                        insert: bText,
+                    },
+                });
+                bEditor.dispatch(bTransaction);
+            }
+        } finally {
+            this.refreshing = false;
+            if (!this.closed && this.state !== state) {
+                await this.createMergeView();
+            }
         }
-        if (aText != aEditor.state.doc.toString()) {
-            const aTransaction = aEditor.state.update({
-                changes: {
-                    from: 0,
-                    to: aEditor.state.doc.length,
-                    insert: aText,
-                },
-            });
-            aEditor.dispatch(aTransaction);
-        }
-
-        if (bText != undefined && bText != bEditor.state.doc.toString()) {
-            const bTransaction = bEditor.state.update({
-                changes: {
-                    from: 0,
-                    to: bEditor.state.doc.length,
-                    insert: bText,
-                },
-            });
-            bEditor.dispatch(bTransaction);
-        }
-        this.refreshing = false;
     }
 
     renderButtons(container: Element): HTMLElement {
@@ -371,122 +543,157 @@ export default class SplitDiffView extends ItemView {
     }
 
     async createMergeView() {
+        await this.flushPendingSave();
+        const state = this.state;
         if (
-            this.state?.aFile &&
-            this.state?.bFile &&
+            state?.aFile &&
+            state?.bFile &&
+            !this.closed &&
             !this.refreshing &&
             this.plugin.gitManager
         ) {
+            const revision = this.editRevision;
+            const vaultPath = this.plugin.gitManager.getRelativeVaultPath(
+                state.bFile
+            );
             this.refreshing = true;
+            try {
+                const editable = await this.bShouldBeEditable(state);
+                this.indexUnmerged = false;
 
-            // cleanup
-            this.mergeView?.destroy();
-            const container = this.containerEl.children[1]!;
-            container.empty();
+                const aText = await this.gitShow(state.aRef, state.aFile);
 
-            // new
-
-            this.contentEl.addClass("git-split-diff-view", "git-diff");
-            this.bIsEditable = await this.bShouldBeEditable();
-
-            const aText = await this.gitShow(this.state.aRef, this.state.aFile);
-
-            let bText: string;
-            if (this.state.bRef != undefined) {
-                bText = await this.gitShow(this.state.bRef, this.state.bFile);
-            } else {
-                const bVaultPath = this.plugin.gitManager.getRelativeVaultPath(
-                    this.state.bFile
-                );
-                if (await this.app.vault.adapter.exists(bVaultPath)) {
-                    bText = await this.app.vault.adapter.read(bVaultPath);
+                let bText: string;
+                if (state.bRef != undefined) {
+                    bText = await this.gitShow(state.bRef, state.bFile);
                 } else {
-                    bText = "";
+                    if (await this.app.vault.adapter.exists(vaultPath)) {
+                        bText = await this.app.vault.adapter.read(vaultPath);
+                    } else {
+                        bText = "";
+                    }
+                }
+
+                // 读取期间可能切换视图或继续编辑，不能用旧快照销毁当前编辑器。
+                if (
+                    this.closed ||
+                    this.state !== state ||
+                    this.editRevision !== revision ||
+                    this.pendingSave
+                ) {
+                    return;
+                }
+                if (
+                    editable &&
+                    (!vaultPath ||
+                        vaultPath.startsWith("/") ||
+                        vaultPath.startsWith("\\") ||
+                        /^[A-Za-z]:/.test(vaultPath) ||
+                        vaultPath.split(/[\\/]/).includes(".."))
+                ) {
+                    throw new Error(t("Cannot edit a file outside the vault."));
+                }
+
+                this.bIsEditable = editable;
+                this.mergeView?.destroy();
+                const container = this.containerEl.children[1]!;
+                container.empty();
+                this.contentEl.addClass("git-split-diff-view", "git-diff");
+
+                const basicExtensions = [
+                    lineNumbers(),
+                    highlightSelectionMatches(),
+                    drawSelection(),
+                    keymap.of([...standardKeymap, indentWithTab]),
+                    history(),
+                    search(),
+                    EditorView.lineWrapping,
+                    diffContextMenu,
+                ];
+                const saveTarget: SaveTarget = {
+                    vaultPath,
+                    savedContent: bText,
+                };
+                this.workingTreeSaveTarget = editable ? saveTarget : undefined;
+                const autoSavePlugin = ViewPlugin.define((view) => ({
+                    update: (update) => {
+                        if (
+                            update.docChanged &&
+                            !update.transactions.some((tr) =>
+                                tr.annotation(Transaction.remote)
+                            )
+                        ) {
+                            this.scheduleFileSave(
+                                saveTarget,
+                                view.state.doc.toString()
+                            );
+                        }
+                    },
+                }));
+
+                const aState = {
+                    doc: aText,
+                    extensions: [
+                        ...basicExtensions,
+                        EditorState.readOnly.of(true),
+                        readOnlyEditorTheme,
+                    ],
+                };
+
+                const bExtensions = [...basicExtensions];
+
+                // 仅工作区文件允许编辑和自动保存。
+                if (!editable) {
+                    bExtensions.push(
+                        EditorState.readOnly.of(true),
+                        readOnlyEditorTheme
+                    );
+                } else {
+                    bExtensions.push(autoSavePlugin);
+                }
+
+                const bState = {
+                    doc: bText,
+                    extensions: bExtensions,
+                };
+
+                container.addClasses([
+                    "cm-s-obsidian",
+                    "mod-cm6",
+                    "markdown-source-view",
+                    "cm-content",
+                ]);
+
+                const showButtons =
+                    this.plugin.gitManager instanceof SimpleGit &&
+                    !this.indexUnmerged &&
+                    (state.bRef === undefined || state.bRef === "");
+
+                this.mergeView = new MergeView({
+                    b: bState,
+                    a: aState,
+                    collapseUnchanged: {
+                        minSize: 6,
+                        margin: 4,
+                    },
+                    renderRevertControl: showButtons
+                        ? () => this.renderButtons(container)
+                        : undefined,
+                    revertControls: showButtons ? "a-to-b" : undefined,
+                    diffConfig: {
+                        timeout: getSplitDiffTimeout(
+                            this.plugin.settings.diffTimeout,
+                            editable
+                        ),
+                    },
+                    parent: container,
+                });
+            } finally {
+                this.refreshing = false;
+                if (!this.closed && this.state !== state) {
+                    await this.createMergeView();
                 }
             }
-
-            const basicExtensions = [
-                lineNumbers(),
-                highlightSelectionMatches(),
-                drawSelection(),
-                keymap.of([...standardKeymap, indentWithTab]),
-                history(),
-                search(),
-                EditorView.lineWrapping,
-                diffContextMenu,
-            ];
-
-            // eslint-disable-next-line @typescript-eslint/no-this-alias
-            const myView = this;
-            const autoSavePlugin = ViewPlugin.define((view) => ({
-                update(update) {
-                    if (
-                        update.docChanged &&
-                        !update.transactions.some((tr) =>
-                            tr.annotation(Transaction.remote)
-                        )
-                    ) {
-                        const lhsContent = view.state.doc.toString();
-                        myView.fileSaveDebouncer(lhsContent);
-                    }
-                },
-            }));
-
-            const aState = {
-                doc: aText,
-                extensions: [
-                    ...basicExtensions,
-                    EditorState.readOnly.of(true),
-                    readOnlyEditorTheme,
-                ],
-            };
-
-            const bExtensions = [...basicExtensions];
-
-            // Only make the editor modifiable when viewing the working tree version
-            if (!this.bIsEditable) {
-                bExtensions.push(
-                    EditorState.readOnly.of(true),
-                    readOnlyEditorTheme
-                );
-            } else {
-                bExtensions.push(autoSavePlugin);
-            }
-
-            const bState = {
-                doc: bText,
-                extensions: bExtensions,
-            };
-
-            container.addClasses([
-                "cm-s-obsidian",
-                "mod-cm6",
-                "markdown-source-view",
-                "cm-content",
-            ]);
-
-            const showButtons =
-                this.plugin.gitManager instanceof SimpleGit &&
-                (this.state.bRef === undefined || this.state.bRef === "");
-
-            this.mergeView = new MergeView({
-                b: bState,
-                a: aState,
-                collapseUnchanged: {
-                    minSize: 6,
-                    margin: 4,
-                },
-                renderRevertControl: showButtons
-                    ? () => this.renderButtons(container)
-                    : undefined,
-                revertControls: showButtons ? "a-to-b" : undefined,
-                diffConfig: {
-                    scanLimit: this.bIsEditable ? 1000 : 10000, // default is 500
-                },
-                parent: container,
-            });
-
-            this.refreshing = false;
         }
     }
 }

@@ -1,15 +1,42 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/only-throw-error */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { DataAdapter, Vault } from "obsidian";
 import { normalizePath, TFile, TFolder } from "obsidian";
 import type ObsidianGit from "../main";
 
 type BinaryData = ArrayBuffer | ArrayBufferView;
+type MyAdapterPromises = Pick<
+    MyAdapter,
+    | "readFile"
+    | "writeFile"
+    | "readdir"
+    | "mkdir"
+    | "rmdir"
+    | "stat"
+    | "unlink"
+    | "lstat"
+    | "readlink"
+    | "symlink"
+>;
+type RmdirOptions = {
+    recursive?: boolean;
+    options?: {
+        recursive?: boolean;
+    };
+};
+
+// Missing stats become NaN in isomorphic-git, so the index stat cache never hits.
+const STABLE_STATS = { uid: 0, gid: 0, ino: 0, dev: 0 };
+
+class FileNotFoundError extends Error {
+    readonly code = "ENOENT";
+
+    constructor(path: string) {
+        super(`File not found: ${path}`);
+        this.name = "FileNotFoundError";
+    }
+}
 
 export class MyAdapter {
-    promises: any = {};
+    promises: MyAdapterPromises;
     adapter: DataAdapter;
     vault: Vault;
     index: ArrayBuffer | undefined;
@@ -25,21 +52,25 @@ export class MyAdapter {
         this.vault = vault;
         this.lastBasePath = this.plugin.settings.basePath;
 
-        this.promises.readFile = this.readFile.bind(this);
-        this.promises.writeFile = this.writeFile.bind(this);
-        this.promises.readdir = this.readdir.bind(this);
-        this.promises.mkdir = this.mkdir.bind(this);
-        this.promises.rmdir = this.rmdir.bind(this);
-        this.promises.stat = this.stat.bind(this);
-        this.promises.unlink = this.unlink.bind(this);
-        this.promises.lstat = this.lstat.bind(this);
-        this.promises.readlink = this.readlink.bind(this);
-        this.promises.symlink = this.symlink.bind(this);
+        this.promises = {
+            readFile: this.readFile.bind(this),
+            writeFile: this.writeFile.bind(this),
+            readdir: this.readdir.bind(this),
+            mkdir: this.mkdir.bind(this),
+            rmdir: this.rmdir.bind(this),
+            stat: this.stat.bind(this),
+            unlink: this.unlink.bind(this),
+            lstat: this.lstat.bind(this),
+            readlink: this.readlink.bind(this),
+            symlink: this.symlink.bind(this),
+        };
     }
     async readFile(
         path: string,
         opts?: string | { encoding?: string; [key: string]: unknown }
     ) {
+        if (path === undefined) return undefined;
+        path = normalizePath(path);
         this.maybeLog("Read: " + path + JSON.stringify(opts));
         const encoding = typeof opts === "string" ? opts : opts?.encoding;
         if (encoding === "utf8") {
@@ -72,6 +103,7 @@ export class MyAdapter {
     }
     async writeFile(path: string, data: string | BinaryData) {
         this.maybeLog("Write: " + path);
+        path = normalizePath(path);
 
         if (typeof data === "string") {
             const file = this.vault.getAbstractFileByPath(path);
@@ -103,6 +135,8 @@ export class MyAdapter {
         }
     }
     async readdir(path: string) {
+        path = normalizePath(path);
+        this.maybeLog("ReadDir: " + path);
         if (path === ".") path = "/";
         const res = await this.adapter.list(path);
         const all = [...res.files, ...res.folders];
@@ -117,6 +151,7 @@ export class MyAdapter {
         return formattedAll;
     }
     async mkdir(path: string) {
+        path = normalizePath(path);
         if (path === "." || path === "/") return;
 
         if (!this.isHiddenPath(path)) {
@@ -129,7 +164,9 @@ export class MyAdapter {
 
         return this.adapter.mkdir(path);
     }
-    async rmdir(path: string, opts: any) {
+    async rmdir(path: string, opts?: RmdirOptions) {
+        path = normalizePath(path);
+        this.maybeLog("Rmdir: " + path + JSON.stringify(opts));
         if (!this.isHiddenPath(path)) {
             const file = this.vault.getAbstractFileByPath(path);
             if (file instanceof TFolder) {
@@ -148,6 +185,8 @@ export class MyAdapter {
         );
     }
     async stat(path: string) {
+        path = normalizePath(path);
+
         if (this.isIndexPath(path)) {
             if (
                 this.index !== undefined &&
@@ -155,6 +194,7 @@ export class MyAdapter {
                 this.indexmtime != undefined
             ) {
                 return {
+                    ...STABLE_STATS,
                     isFile: () => true,
                     isDirectory: () => false,
                     isSymbolicLink: () => false,
@@ -166,11 +206,12 @@ export class MyAdapter {
             } else {
                 const stat = await this.adapter.stat(path);
                 if (stat == undefined) {
-                    throw { code: "ENOENT" };
+                    throw new FileNotFoundError(path);
                 }
                 this.indexctime = stat.ctime;
                 this.indexmtime = stat.mtime;
                 return {
+                    ...STABLE_STATS,
                     ctimeMs: stat.ctime,
                     mtimeMs: stat.mtime,
                     size: stat.size,
@@ -187,6 +228,7 @@ export class MyAdapter {
         if (file instanceof TFile) {
             this.maybeLog("Reuse stat");
             return {
+                ...STABLE_STATS,
                 ctimeMs: file.stat.ctime,
                 mtimeMs: file.stat.mtime,
                 size: file.stat.size,
@@ -199,6 +241,7 @@ export class MyAdapter {
             const stat = await this.adapter.stat(path);
             if (stat) {
                 return {
+                    ...STABLE_STATS,
                     ctimeMs: stat.ctime,
                     mtimeMs: stat.mtime,
                     size: stat.size,
@@ -209,11 +252,12 @@ export class MyAdapter {
                 };
             } else {
                 // used to determine whether a file exists or not
-                throw { code: "ENOENT" };
+                throw new FileNotFoundError(path);
             }
         }
     }
     async unlink(path: string) {
+        path = normalizePath(path);
         if (!this.isHiddenPath(path)) {
             const file = this.vault.getAbstractFileByPath(path);
             if (file instanceof TFile) {
@@ -226,11 +270,15 @@ export class MyAdapter {
     async lstat(path: string) {
         return this.stat(path);
     }
-    async readlink(path: string) {
-        throw new Error(`readlink of (${path}) is not implemented.`);
+    readlink(path: string): Promise<never> {
+        return Promise.reject(
+            new Error(`readlink of (${path}) is not implemented.`)
+        );
     }
-    async symlink(path: string) {
-        throw new Error(`symlink of (${path}) is not implemented.`);
+    symlink(path: string): Promise<never> {
+        return Promise.reject(
+            new Error(`symlink of (${path}) is not implemented.`)
+        );
     }
 
     async saveAndClear(): Promise<void> {
@@ -268,7 +316,7 @@ export class MyAdapter {
         if (path.startsWith(this.gitDir)) {
             return true;
         }
-        return normalizePath(path)
+        return path
             .split("/")
             .some(
                 (component) => component.startsWith(".") && component !== "."

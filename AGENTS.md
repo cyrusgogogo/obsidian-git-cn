@@ -4,7 +4,7 @@
 
 - 本仓库目标是**中文版 Obsidian Git 插件**：自动 commit / push / pull、远端变更检测、自动 merge 与冲突提示，面向中文用户，界面与文档完整中文化。
 - 上游（fork 来源）：[obsidian-git](https://github.com/Vinzent03/obsidian-git)（MIT 许可）。
-- **当前状态：v0.1 进行中。** 已导入上游基线源码（v2.39.0，基线见 `docs/upstream.md`），i18n 模块已搭骨架；全部用户可见文案的迁移见 `.scratch/v1-core/issues/01-*.md`。
+- **当前状态：已发布 1.0.0，源码跟进上游中。** 初始基线 v2.39.0，当前已合并 v2.41.1 及后续 `master` 修复，具体提交见 `docs/upstream.md`；中英界面与静态词条完整性测试已接入，问题跟踪使用 GitHub Issues。
 
 ## 功能硬性要求
 

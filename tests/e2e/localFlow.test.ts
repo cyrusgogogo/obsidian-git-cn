@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "fs";
 import path from "path";
-import simpleGit from "simple-git";
+import { simpleGit } from "simple-git";
 import { describe, expect, it } from "vitest";
 
 import { cleanupTempDirectory, createTempDirectory } from "../helpers/gitRepo";

@@ -1,6 +1,7 @@
 import type { HoverParent, HoverPopover, WorkspaceLeaf } from "obsidian";
 import { ItemView } from "obsidian";
 import { HISTORY_VIEW_CONFIG } from "src/constants";
+import { t } from "src/i18n";
 import type ObsidianGit from "src/main";
 import HistoryViewComponent from "./historyView.svelte";
 import { mount, unmount } from "svelte";
@@ -21,25 +22,23 @@ export default class HistoryView extends ItemView implements HoverParent {
     }
 
     getDisplayText(): string {
-        return HISTORY_VIEW_CONFIG.name;
+        return t(HISTORY_VIEW_CONFIG.name);
     }
 
     getIcon(): string {
         return HISTORY_VIEW_CONFIG.icon;
     }
 
-    onClose(): Promise<void> {
+    async onClose(): Promise<void> {
         if (this._view) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            unmount(this._view);
+            await unmount(this._view);
         }
         return super.onClose();
     }
 
-    reload(): void {
+    async reload(): Promise<void> {
         if (this._view) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            unmount(this._view);
+            await unmount(this._view);
         }
         this._view = mount(HistoryViewComponent, {
             target: this.contentEl,
@@ -50,8 +49,8 @@ export default class HistoryView extends ItemView implements HoverParent {
         });
     }
 
-    onOpen(): Promise<void> {
-        this.reload();
+    async onOpen(): Promise<void> {
+        await this.reload();
         return super.onOpen();
     }
 }

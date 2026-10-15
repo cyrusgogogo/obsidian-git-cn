@@ -519,6 +519,229 @@ const zh: Record<string, string> = {
     "Format string": "格式字符串",
     " to display the authoring date.": " 用于显示编写日期。",
     "Currently: {datetime}": "当前：{datetime}",
+
+    // 新版设置
+    English: "English",
+    Editor: "编辑器",
+    Views: "视图",
+    Enabled: "开启",
+    "Enter a whole number.": "请输入整数。",
+    "Global: {value}": "全局设置：{value}",
+    "Stage all changes when nothing is staged": "没有暂存内容时暂存全部改动",
+    "When using Commit with nothing staged, stage and commit all changes. Commit all changes and Commit-and-sync are unaffected.":
+        "使用「提交」且没有暂存内容时，暂存并提交全部改动。「提交全部改动」和「提交并同步」不受影响。",
+    "Auto-stash changes when rebasing": "变基时自动暂存工作区改动",
+    "Stash local changes before rebasing and restore them afterward. Restoring may produce conflicts.":
+        "变基前使用 stash 暂存本地改动，完成后恢复。恢复时可能产生冲突。",
+    "Use Git configuration": "使用 Git 配置",
+    "Reset to remote (--keep; backs up local history, updates tracked files, and aborts if local changes would be overwritten)":
+        "重置到远端（--keep；先备份本地历史，再更新受跟踪文件；若会覆盖本地改动则中止）",
+    "Diff view": "差异视图",
+    "Split mode creates an editable diff in the editor, which may differ from Git's diff.":
+        "拆分模式在编辑器中生成可编辑的差异，可能与 Git 生成的差异不同。",
+    "Split diff computation time limit (ms)": "拆分差异计算时限（毫秒）",
+    "Maximum milliseconds to compute a detailed split diff. Read-only diffs use ten times this value.":
+        "计算详细拆分差异的最长时间（毫秒）。只读差异使用此值的十倍。",
+    "Show informational notifications": "显示信息通知",
+    "Show notices about Git operations. The status bar still shows updates when this is off.":
+        "显示 Git 操作的信息通知。关闭后，状态栏仍会显示更新。",
+    "Show error notifications": "显示错误通知",
+    "Show error notices for Git operations.": "显示 Git 操作的错误通知。",
+    "Show notifications when nothing changed": "无改动时显示通知",
+    "Also notify when a commit or push finds no changes.":
+        "提交或推送时未发现改动也显示通知。",
+    "Add Stage, Unstage, and Add to .gitignore actions to the file menu.":
+        "在文件菜单中加入「暂存」「取消暂存」和「加入 .gitignore」操作。",
+    "Select or create a secret stored on this device for this vault.":
+        "为此 Vault 选择或创建保存在本设备上的密钥。",
+    "Limit file operations to the vault": "将文件操作限制在 Vault 内",
+    "Limit status, staging, unstaging, discarding, and submodule updates to the vault where possible. Repository history and remote actions remain repository-wide.":
+        "尽可能将状态查询、暂存、取消暂存、丢弃改动及子模块更新限制在 Vault 内。仓库历史与远端操作仍作用于整个仓库。",
+    "Leave empty when the repository is at the root.":
+        "仓库位于 Vault 根目录时留空。",
+    "Choose an existing folder in this vault.":
+        "请选择此 Vault 中已有的文件夹。",
+    "Debugging and logging": "调试与日志",
+    "May contain sensitive settings.": "可能包含敏感设置。",
+    "Changes only this repository's Git config. Leave blank to use the global author name, if configured.":
+        "仅修改此仓库的 Git 配置。留空时使用已配置的全局作者姓名。",
+    "Saved in this repository's Git config. Mobile Git has no global author name fallback.":
+        "保存在此仓库的 Git 配置中。移动端 Git 不会回退到全局作者姓名。",
+    "Changes only this repository's Git config. Leave blank to use the global author email, if configured.":
+        "仅修改此仓库的 Git 配置。留空时使用已配置的全局作者邮箱。",
+    "Saved in this repository's Git config. Mobile Git has no global author email fallback.":
+        "保存在此仓库的 Git 配置中。移动端 Git 不会回退到全局作者邮箱。",
+    "Copies only boolean and numeric settings; excludes credentials, paths, and custom text.":
+        "仅复制开关与数值设置，不包含凭据、路径及自定义文本。",
+    "Sanitized debug information copied to clipboard.":
+        "已将脱敏后的调试信息复制到剪贴板。",
+    "Open the developer console with {shortcut}.":
+        "使用 {shortcut} 打开开发者控制台。",
+    Support: "支持",
+    Donate: "捐赠",
+    "Support continued development of the plugin.": "支持插件的持续开发。",
+    "abcdef Author Name {date}": "abcdef 作者姓名 {date}",
+
+    // 合并冲突与提交操作
+    "Keep ours": "保留本地内容",
+    "Keep theirs": "采用传入内容",
+    "Keep both": "保留双方内容",
+    "Keep base": "保留共同祖先内容",
+    "Keep all ours": "全部保留本地内容",
+    "Keep all theirs": "全部采用传入内容",
+    "Keep all base": "全部保留共同祖先内容",
+    "{n} conflict(s) in file": "文件中有 {n} 处冲突",
+    "Mark resolved": "标记为已解决",
+    "No conflicts left": "没有剩余冲突",
+    "{n} conflict(s) left": "剩余 {n} 处冲突",
+    "Merge in progress": "合并进行中",
+    "Merge in progress. Select for help resolving and finishing the merge.":
+        "合并进行中。点击查看解决冲突与完成合并的帮助。",
+    "Merge in progress. Select the merge icon for help resolving and finishing it.":
+        "合并进行中。点击合并图标查看解决冲突与完成合并的帮助。",
+    "Merge in progress - select for help": "合并进行中，点击查看帮助",
+    "Git is combining the version in your vault with changes from another version. The merge must be committed before Obsidian Git can push or resume automatic commits.":
+        "Git 正在将 Vault 中的版本与另一版本的改动合并。必须先提交此次合并，Obsidian Git 才能推送或恢复自动提交。",
+    "Resolve the conflicts": "解决冲突",
+    "Git could not combine some parts automatically. Open each conflicted file and review every highlighted conflict block.":
+        "Git 无法自动合并部分内容。请打开每个冲突文件，逐一检查高亮的冲突块。",
+    "Choose {ours} for your local text, {theirs} for the incoming text, {both}, or edit the block manually.":
+        "选择「{ours}」保留本地文本，选择「{theirs}」采用传入文本，选择「{both}」，或手动编辑冲突块。",
+    "When the file's conflict count reaches zero, select the plus icon next to it to mark it as resolved.":
+        "文件的冲突数量变为零后，点击旁边的加号图标，将其标记为已解决。",
+    "Repeat this for every file in the Conflicts section.":
+        "对「冲突」区域中的每个文件重复上述操作。",
+    "All conflicts have been marked as resolved.": "所有冲突均已标记为已解决。",
+    "The merge is still active until you commit the staged changes.":
+        "提交已暂存的改动后，此次合并才会完成。",
+    "Finish the merge": "完成合并",
+    "After the Conflicts section is empty, enter a commit message and commit the staged changes. This finishes the merge. You can then push normally.":
+        "「冲突」区域清空后，输入提交信息并提交已暂存的改动，即可完成合并。之后可正常推送。",
+    "Got it": "知道了",
+    "Resolve conflicts before committing": "请先解决冲突再提交",
+    "Finish merge and sync": "完成合并并同步",
+    "Finish merge": "完成合并",
+    "Sync (no changes to commit)": "同步（没有需要提交的改动）",
+    "Commit all changes and sync": "提交全部改动并同步",
+    "Commit {n} staged file(s)": "提交 {n} 个已暂存文件",
+    "Nothing staged - stage changes before committing":
+        "没有暂存内容，请先暂存改动再提交",
+    "Stage and commit all {n} changed file(s)": "暂存并提交全部 {n} 个改动文件",
+    "Stage all and commit": "全部暂存并提交",
+    "Commit staged and sync": "提交已暂存内容并同步",
+    "More commit actions": "更多提交操作",
+    "Automatic commit stopped because of unresolved conflicts":
+        "存在未解决的冲突，自动提交已停止",
+    "Did not commit automatically because a merge is in progress. Commit it manually.":
+        "合并进行中，未执行自动提交。请手动提交。",
+    "Nothing staged. Stage changes first or use Commit all changes.":
+        "没有暂存内容。请先暂存改动，或使用「提交全部改动」。",
+    "Cannot push while a merge is still in progress": "合并尚未完成，无法推送",
+    "Cannot pull while a merge is still in progress": "合并尚未完成，无法拉取",
+    "Merge conflict in {n} file(s). Resolve conflicts and commit manually.":
+        "{n} 个文件存在合并冲突。请解决冲突后手动提交。",
+    "Merge conflict. Resolve conflicts and commit manually.":
+        "存在合并冲突。请解决冲突后手动提交。",
+    "Rebase is in progress. Do not use ordinary commit commands. Resolve and stage conflicts, then run native Git `git rebase --continue`, or use `git rebase --abort` to abort.":
+        "变基进行中，请勿使用普通提交命令。解决并暂存冲突后，使用原生 Git 执行 `git rebase --continue` 继续，或执行 `git rebase --abort` 中止。",
+    "Rebase in progress": "变基进行中",
+    "During rebase, ours is the branch being rebased onto and theirs is the commit being replayed. Review both sides carefully, or edit the conflict manually.":
+        "变基时，ours 指变基的目标分支，theirs 指正在重放的提交。请仔细检查双方内容，或手动编辑冲突。",
+    "The rebase is still active. Run `git rebase --continue` after staging the resolved files; further commits may have conflicts.":
+        "变基尚未完成。暂存已解决冲突的文件后，执行 `git rebase --continue` 继续；后续提交仍可能产生冲突。",
+    "Continue the rebase": "继续变基",
+
+    // 差异编辑器的保存保护
+    "Cannot edit a file outside the vault.": "无法编辑 Vault 外的文件。",
+    "The file changed outside the diff editor. Save was blocked; copy your unsaved edits before reloading.":
+        "文件已在差异编辑器之外发生改动。已阻止保存；重新加载前，请复制尚未保存的编辑内容。",
+    "Could not save the diff editor changes.": "无法保存差异编辑器中的改动。",
+    "Working Tree": "工作区",
+    Index: "索引",
+    "Diff: {file} ({ref})": "差异：{file}（{ref}）",
+
+    // 固定错误原文由 displayError 的统一翻译入口处理
+    "Push rejected because the tag already exists on the remote.":
+        "推送被拒绝：远端已存在此标签。",
+    "Push rejected. Pull changes from the remote, resolve any conflicts, then push again.":
+        "推送被拒绝。请先拉取远端改动，解决所有冲突后再推送。",
+    "Cannot pull because a merge is still in progress. Commit or abort it first.":
+        "合并尚未完成，无法拉取。请先提交或中止此次合并。",
+    "Merge conflict was not reproduced.": "未能复现合并冲突。",
+    "Pull did not produce a commit to check out.": "拉取未生成可供检出的提交。",
+    "isomorphic-git returned invalid unmerged paths":
+        "isomorphic-git 返回的未合并文件路径无效",
+    "Git author name and email are not set. Please set both fields in the settings.":
+        "尚未设置 Git 作者姓名和邮箱。请在设置中填写这两个字段。",
+    "isomorphic-git walk returned a non-array result":
+        "isomorphic-git 的文件遍历返回了非数组结果",
+
+    // 仓库操作与新版通知
+    Yes: "是",
+    No: "否",
+    "Git is not ready": "Git 未就绪",
+    "Cannot clone into the vault root when the remote contains {dir}. Your local configuration and plugins are preserved. Clone into an empty subdirectory instead.":
+        "远端包含 {dir} 时，不能克隆到 Vault 根目录。已保留本地配置和插件，请改为克隆到空子目录。",
+    "Pulled {n} file(s) from remote ({inside} in the vault, {outside} outside)":
+        "已从远端拉取 {n} 个文件（Vault 内 {inside} 个，Vault 外 {outside} 个）",
+    "Commit message script exited with code {code}":
+        "提交信息脚本退出，退出码为 {code}",
+    "No current branch found. Cannot push.": "未找到当前分支，无法推送。",
+    "Applying a patch is only supported on desktop": "应用补丁仅在桌面端受支持",
+    "Raw Git commands are only supported on desktop":
+        "原生 Git 命令仅在桌面端受支持",
+    "Reloading native Git is only supported on desktop":
+        "重载原生 Git 仅在桌面端受支持",
+    "This branch isn't merged into HEAD. Force delete?":
+        "此分支尚未合并到 HEAD。是否强制删除？",
+    "Upstream branch will be created on first push. Skipping pull.\nUse set upstream branch command to set it manually if desired.":
+        "上游分支将在首次推送时创建，已跳过拉取。\n如需手动设置，请使用「设置上游分支」命令。",
+    "Cannot find a Git repository. Please create one via the given command, clone an existing repo or configure repo location.":
+        "找不到 Git 仓库。请使用相应命令创建仓库、克隆现有仓库，或配置仓库位置。",
+    "Open file at this commit": "打开此提交中的文件",
+    "Source Control": "源码控制",
+    History: "历史",
+    "File at commit": "提交中的文件",
+    "Diff View": "差异视图",
+    "No Git repository found.": "未找到 Git 仓库。",
+    Conflicts: "冲突",
+    "Staged Changes": "已暂存的改动",
+    "Staged outside vault": "Vault 外的已暂存改动",
+    "Conflicts outside vault": "Vault 外的冲突",
+    Changes: "改动",
+    "Recently Pulled Files": "最近拉取的文件",
+
+    // 搜索面板与 Git 动态进度阶段
+    Find: "查找",
+    next: "下一个",
+    previous: "上一个",
+    all: "全部",
+    "match case": "区分大小写",
+    regexp: "正则表达式",
+    "by word": "全字匹配",
+    close: "关闭",
+    "current match": "当前匹配",
+    "on line": "所在行",
+    Cloning: "正在克隆",
+    Working: "正在处理",
+    counting: "正在统计对象",
+    compressing: "正在压缩对象",
+    receiving: "正在接收对象",
+    resolving: "正在解析差异",
+    writing: "正在写入对象",
+    "Enumerating objects": "正在枚举对象",
+    "Counting objects": "正在统计对象",
+    "Compressing objects": "正在压缩对象",
+    "Receiving objects": "正在接收对象",
+    "Resolving deltas": "正在解析差异",
+    "Writing objects": "正在写入对象",
+    "Analyzing workdir": "正在分析工作区",
+    "Updating workdir": "正在更新工作区",
+    "Askpass server cannot be started again": "认证服务不能重复启动",
+    "Askpass server stopped during startup": "认证服务在启动期间停止",
+    "Enter Git username": "请输入 Git 用户名",
+    "Enter Git password or passphrase": "请输入 Git 密码、令牌或密钥口令",
+    "Git authentication request: {prompt}": "Git 认证请求：{prompt}",
 };
 
 let currentLocale: Locale = "zh";
@@ -546,11 +769,16 @@ export function t(
     params?: Record<string, string | number>
 ): string {
     const table = currentLocale === "zh" ? zh : undefined;
-    let text = table?.[key] ?? key;
-    if (params) {
-        for (const [name, value] of Object.entries(params)) {
-            text = text.replaceAll(`{${name}}`, String(value));
-        }
-    }
-    return text;
+    const text =
+        table && Object.prototype.hasOwnProperty.call(table, key)
+            ? (table[key] ?? key)
+            : key;
+    // 双层花括号属于提交模板；插值只替换单层参数，且不递归处理参数值。
+    return text.replace(
+        /\{\{[^{}]+\}\}|\{([^{}]+)\}/g,
+        (match, name: string) =>
+            params && name && Object.prototype.hasOwnProperty.call(params, name)
+                ? String(params[name])
+                : match
+    );
 }

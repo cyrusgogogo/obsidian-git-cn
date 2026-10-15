@@ -15,17 +15,21 @@ export async function createProtectiveCommit(deps: {
         message: string;
         status: Status;
         unstagedFiles: UnstagedFile[];
+        protective: true;
     }): Promise<number | undefined>;
 }): Promise<boolean> {
     const status = await deps.updateCachedStatus();
-    if (status.all.length === 0) {
+    if (status.all.length === 0 && !status.stagedOutsideVault) {
         return false;
     }
     await deps.commitAll({
         message: t("Protective commit before sync"),
         status,
-        // status.changed 缺 `type` 字段，该字段仅在 isomorphic-git 需要
-        unstagedFiles: status.changed as unknown as UnstagedFile[],
+        unstagedFiles: status.changed.map((file) => ({
+            path: file.path,
+            type: file.workingDir === "D" ? "D" : "M",
+        })),
+        protective: true,
     });
     return true;
 }

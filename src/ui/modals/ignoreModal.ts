@@ -4,8 +4,8 @@ import { t } from "src/i18n";
 
 export class IgnoreModal extends Modal {
     resolve:
-        | ((value: string | PromiseLike<string> | undefined) => void)
-        | null = null;
+        ((value: string | PromiseLike<string> | undefined) => void) | null =
+        null;
     constructor(
         app: App,
         private content: string

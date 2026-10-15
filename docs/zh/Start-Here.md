@@ -8,6 +8,7 @@
 -   [开始使用](Getting-Started.md)
 -   [认证（凭据助手）](../Authentication.zh.md)
 -   [常见问题与故障排查](Common-Issues.md)
+-   [解决同步冲突](Conflict-Resolution.md)
 
 ## 什么是 Git
 
