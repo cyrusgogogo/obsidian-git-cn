@@ -20,6 +20,8 @@
     import type GitView from "./sourceControl";
     import TooManyFilesComponent from "./components/tooManyFilesComponent.svelte";
     import { onMount } from "svelte";
+    import { getCommitAvailability } from "./commitAvailability";
+    import { createCommitSubmission } from "./commitSubmission";
 
     interface Props {
         plugin: ObsidianGit;
@@ -28,12 +30,15 @@
 
     let { plugin, view }: Props = $props();
     let loading: boolean = $state(false);
+    let pending = $state(false);
     let repositoryMissing = $state(false);
     let setupInProgress = $state(false);
     let mergeInProgress = $state(false);
+    let rebaseInProgress = $state(false);
     let status: Status | undefined = $state();
     let lastPulledFiles: FileStatusResult[] = $state([]);
-    let commitMessage = $derived(plugin.settings.commitMessage);
+    let commitMessage = $state("");
+    let messageRevision = $state(0);
     let buttons: (HTMLElement | null)[] = $state([]);
     let changeHierarchy: StatusRootTreeItem | undefined = $state();
     let stagedHierarchy: StatusRootTreeItem | undefined = $state();
@@ -71,6 +76,44 @@
     let hasChanges = $derived(stagedCount + changedCount > 0);
     let commitDisabled = $derived(!canCommit("smart"));
     let commitAndSyncDisabled = $derived(!canCommitAndSync("all"));
+    let syncBlocked = $derived(
+        pending ||
+            !status ||
+            repositoryMissing ||
+            hasConflicts ||
+            mergeInProgress
+    );
+    let summaryTitle = $derived(
+        rebaseInProgress
+            ? t("Rebase in progress")
+            : hasConflicts
+              ? t("Resolve the conflicts")
+              : mergeInProgress
+                ? t("Finish merge")
+                : loading || pending
+                  ? t("Working")
+                  : !status
+                    ? t("Git is not ready")
+                    : hasChanges
+                      ? t("Changes")
+                      : t("No changes to commit")
+    );
+    let syncButtonLabel = $derived(
+        mergeInProgress && !rebaseInProgress
+            ? t("Finish merge and sync")
+            : hasChanges
+              ? t("commit-and-sync")
+              : t("Sync")
+    );
+    let commitButtonLabel = $derived(
+        mergeInProgress && !rebaseInProgress
+            ? t("Finish merge")
+            : stagedCount > 0
+              ? t("Commit staged")
+              : plugin.settings.autoStageOnEmptyIndex && changedCount > 0
+                ? t("Stage all and commit")
+                : t("Commit")
+    );
 
     let commitActionDescription = $derived(getCommitActionDescription(false));
     let commitAndSyncActionDescription = $derived(
@@ -79,6 +122,7 @@
 
     let showTree = $derived(plugin.settings.treeStructure);
     onMount(() => {
+        commitMessage = plugin.settings.commitMessage;
         repositoryMissing = plugin.repositoryMissing;
         view.registerEvent(
             view.app.workspace.on(
@@ -152,6 +196,12 @@
     });
 
     function getCommitActionDescription(sync: boolean): string {
+        if (rebaseInProgress) {
+            return t(
+                "Rebase is in progress. Do not use ordinary commit commands. Resolve and stage conflicts, then run native Git `git rebase --continue`, or use `git rebase --abort` to abort."
+            );
+        }
+        if (!status || repositoryMissing) return t("Git is not ready");
         if (hasConflicts) {
             return t("Resolve conflicts before committing");
         }
@@ -178,67 +228,67 @@
     }
 
     function canCommit(mode: CommitMode): boolean {
-        if (hasConflicts) return false;
-        if (mode === "staged") return stagedCount > 0;
-        if (mode === "all") return hasChanges;
-        return (
-            mergeInProgress ||
-            stagedCount > 0 ||
-            (plugin.settings.autoStageOnEmptyIndex && changedCount > 0)
-        );
+        return commitAvailability()[mode];
     }
 
     function canCommitAndSync(mode: "staged" | "all"): boolean {
-        if (hasConflicts) return false;
-        return mode === "all" || stagedCount > 0;
+        const availability = commitAvailability();
+        return mode === "all" ? availability.syncAll : availability.syncStaged;
     }
+
+    function commitAvailability() {
+        return getCommitAvailability({
+            ready: !!status && plugin.gitReady && !repositoryMissing,
+            pending,
+            hasConflicts,
+            rebaseInProgress: rebaseInProgress || plugin.syncKind === "rebase",
+            mergeInProgress,
+            stagedCount,
+            changedCount,
+            autoStageOnEmptyIndex: plugin.settings.autoStageOnEmptyIndex,
+        });
+    }
+
+    const commitSubmission = createCommitSubmission({
+        get queue() {
+            return plugin.promiseQueue;
+        },
+        getDraft: () => ({ message: commitMessage, revision: messageRevision }),
+        setPending: (value) => (pending = value),
+        clearMessage: () => (commitMessage = ""),
+        refresh: triggerRefresh,
+        run: (snapshot) =>
+            snapshot.kind === "sync"
+                ? plugin.gitActions.commitAndSync({
+                      fromAutoBackup: false,
+                      commitMessage: snapshot.commitMessage,
+                      mode: snapshot.mode,
+                  })
+                : plugin.gitActions.commit({
+                      fromAuto: false,
+                      commitMessage: snapshot.commitMessage,
+                      mode: snapshot.mode,
+                      amend: snapshot.amend,
+                  }),
+    });
 
     function commit(mode: CommitMode = "smart") {
         if (!canCommit(mode)) return;
-        loading = true;
-        if (status) {
-            plugin.promiseQueue.addTask(() =>
-                plugin.gitActions
-                    .commit({ fromAuto: false, commitMessage, mode })
-                    .then(() => (commitMessage = plugin.settings.commitMessage))
-                    .finally(triggerRefresh)
-            );
-        }
+        commitSubmission.submit({ kind: "commit", mode });
     }
 
     function amendStaged() {
         if (!canCommit("staged")) return;
-        loading = true;
-        plugin.promiseQueue.addTask(() =>
-            plugin.gitActions
-                .commit({
-                    fromAuto: false,
-                    commitMessage,
-                    mode: "staged",
-                    amend: true,
-                })
-                .then(() => (commitMessage = plugin.settings.commitMessage))
-                .finally(triggerRefresh)
-        );
+        commitSubmission.submit({
+            kind: "commit",
+            mode: "staged",
+            amend: true,
+        });
     }
 
     function commitAndSync(mode: "staged" | "all" = "all") {
         if (!canCommitAndSync(mode)) return;
-        loading = true;
-        if (status) {
-            plugin.promiseQueue.addTask(() =>
-                plugin.gitActions
-                    .commitAndSync({
-                        fromAutoBackup: false,
-                        commitMessage,
-                        mode,
-                    })
-                    .then(() => {
-                        commitMessage = plugin.settings.commitMessage;
-                    })
-                    .finally(triggerRefresh)
-            );
-        }
+        commitSubmission.submit({ kind: "sync", mode });
     }
 
     function showCommitMenu(event: MouseEvent) {
@@ -270,7 +320,7 @@
             item
                 .setTitle(t("Commit staged and sync"))
                 .setIcon("arrow-up-circle")
-                .setDisabled(!canCommit("staged"))
+                .setDisabled(!canCommitAndSync("staged"))
                 .onClick(() => commitAndSync("staged"))
         );
         menu.showAtMouseEvent(event);
@@ -286,6 +336,7 @@
 
         status = plugin.cachedStatus;
         mergeInProgress = plugin.state.mergeInProgress;
+        rebaseInProgress = plugin.syncKind === "rebase";
         loading = false;
         if (
             plugin.lastPulledFiles &&
@@ -406,12 +457,14 @@
     }
 
     function push() {
+        if (syncBlocked || plugin.syncKind !== "none") return;
         loading = true;
         plugin.promiseQueue.addTask(() =>
             plugin.gitActions.push().finally(triggerRefresh)
         );
     }
     function pull() {
+        if (syncBlocked || plugin.syncKind !== "none") return;
         loading = true;
         plugin.promiseQueue.addTask(() =>
             plugin.gitActions.pullChangesFromRemote().finally(triggerRefresh)
@@ -422,7 +475,9 @@
         plugin.promiseQueue.addTask(() => plugin.gitActions.discardAll());
     }
 
-    let rows = $derived((commitMessage.match(/\n/g) || []).length + 1 || 1);
+    let rows = $derived(
+        Math.min(6, Math.max(3, (commitMessage.match(/\n/g) || []).length + 1))
+    );
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -453,37 +508,8 @@
         </div>
     {/if}
     <div class="nav-header">
+        <h2>{t("Source Control")}</h2>
         <div class="nav-buttons-container">
-            <div class="commit-action-group">
-                <div
-                    id="backup-btn"
-                    data-icon="arrow-up-circle"
-                    class="clickable-icon nav-action-button"
-                    class:is-disabled={commitAndSyncDisabled}
-                    aria-label={commitAndSyncActionDescription}
-                    aria-disabled={commitAndSyncDisabled}
-                    bind:this={buttons[0]}
-                    onclick={() => commitAndSync()}
-                ></div>
-                <div
-                    id="commit-btn"
-                    data-icon="check"
-                    class="clickable-icon nav-action-button"
-                    class:is-disabled={commitDisabled}
-                    aria-label={commitActionDescription}
-                    aria-disabled={commitDisabled}
-                    bind:this={buttons[1]}
-                    onclick={() => commit()}
-                ></div>
-                <div
-                    id="commit-menu"
-                    data-icon="chevron-down"
-                    class="clickable-icon nav-action-button"
-                    aria-label={t("More commit actions")}
-                    bind:this={buttons[10]}
-                    onclick={showCommitMenu}
-                ></div>
-            </div>
             <div
                 id="stage-all"
                 class="clickable-icon nav-action-button"
@@ -500,22 +526,24 @@
                 bind:this={buttons[3]}
                 onclick={unstageAll}
             ></div>
-            <div
+            <button
                 id="push"
                 class="clickable-icon nav-action-button"
                 data-icon="upload"
                 aria-label={t("Push")}
+                disabled={syncBlocked}
                 bind:this={buttons[4]}
                 onclick={push}
-            ></div>
-            <div
+            ></button>
+            <button
                 id="pull"
                 class="clickable-icon nav-action-button"
                 data-icon="download"
                 aria-label={t("Pull")}
+                disabled={syncBlocked}
                 bind:this={buttons[5]}
                 onclick={pull}
-            ></div>
+            ></button>
             <div
                 id="layoutChange"
                 class="clickable-icon nav-action-button"
@@ -543,30 +571,70 @@
                     id="merge-status"
                     class="clickable-icon nav-action-button merge-status"
                     data-icon="git-merge"
-                    aria-label={t("Merge in progress - select for help")}
+                    aria-label={rebaseInProgress
+                        ? t("Rebase in progress")
+                        : t("Merge in progress - select for help")}
                     bind:this={buttons[11]}
                     onclick={() => plugin.openMergeConflictHelp()}
                 ></div>
             {/if}
         </div>
     </div>
-    <div class="git-commit-msg">
-        <textarea
-            {rows}
-            class="commit-msg-input"
-            spellcheck="true"
-            placeholder={t("Commit Message")}
-            bind:value={commitMessage}></textarea>
-        {#if commitMessage}
-            <div
-                class="git-commit-msg-clear-button"
-                onclick={() => (commitMessage = "")}
-                aria-label={t("Clear")}
-            ></div>
+    <section
+        class="status-summary"
+        class:needs-attention={hasConflicts || mergeInProgress}
+        aria-label={t("Source Control")}
+        aria-live="polite"
+    >
+        <div class="summary-title">
+            <span class="status-dot" aria-hidden="true"></span>
+            <strong>{summaryTitle}</strong>
+        </div>
+        {#if mergeInProgress}
+            <button
+                class="merge-help"
+                onclick={() => plugin.openMergeConflictHelp()}
+            >
+                {rebaseInProgress
+                    ? t(
+                          "The rebase is still active. Run `git rebase --continue` after staging the resolved files; further commits may have conflicts."
+                      )
+                    : hasConflicts
+                      ? t(
+                            "Merge in progress. Select for help resolving and finishing the merge."
+                        )
+                      : t(
+                            "The merge is still active until you commit the staged changes."
+                        )}
+            </button>
         {/if}
-    </div>
+        {#if status}
+            <div class="summary-metrics">
+                <span>{t("Changes")} <b>{changedCount}</b></span>
+                <span>{t("Staged Changes")} <b>{stagedCount}</b></span>
+                {#if hasConflicts}
+                    <span class="conflict-metric">
+                        {t("Conflicts")}
+                        <b
+                            >{status.conflicted.length +
+                                status.conflictedOutsideVault}</b
+                        >
+                    </span>
+                {/if}
+                <span>{t("{n} unpushed commits", { n: unPushedCommits })}</span>
+                {#if status.ahead !== undefined && status.behind !== undefined}
+                    <span class="remote-metric">
+                        {t("Local {ahead} ahead / {behind} behind", {
+                            ahead: status.ahead,
+                            behind: status.behind,
+                        })}
+                    </span>
+                {/if}
+            </div>
+        {/if}
+    </section>
 
-    <div class="nav-files-container" style="position: relative;">
+    <div class="nav-files-container">
         {#if status && status.conflicted.length > 0}
             <div
                 class="conflicts tree-item nav-folder"
@@ -937,12 +1005,287 @@
             </div>
         {/if}
     </div>
+    <footer class="commit-box">
+        <div class="git-commit-msg">
+            <textarea
+                {rows}
+                class="commit-msg-input"
+                spellcheck="true"
+                aria-label={t("Commit Message")}
+                placeholder={t("Commit Message")}
+                oninput={() => messageRevision++}
+                bind:value={commitMessage}></textarea>
+            {#if commitMessage}
+                <button
+                    class="git-commit-msg-clear-button"
+                    onclick={() => {
+                        messageRevision++;
+                        commitMessage = "";
+                    }}
+                    aria-label={t("Clear")}
+                ></button>
+            {/if}
+        </div>
+        <div class="commit-actions">
+            <button
+                id="backup-btn"
+                class="mod-cta commit-primary"
+                disabled={commitAndSyncDisabled}
+                title={commitAndSyncActionDescription}
+                onclick={() => commitAndSync()}
+            >
+                <span
+                    data-icon="arrow-up-circle"
+                    bind:this={buttons[0]}
+                    aria-hidden="true"
+                ></span>
+                {syncButtonLabel}
+            </button>
+            <div class="commit-action-group">
+                <button
+                    id="commit-btn"
+                    disabled={commitDisabled}
+                    title={commitActionDescription}
+                    onclick={() => commit()}>{commitButtonLabel}</button
+                >
+                <button
+                    id="commit-menu"
+                    data-icon="chevron-down"
+                    class="clickable-icon"
+                    aria-label={t("More commit actions")}
+                    disabled={pending}
+                    bind:this={buttons[10]}
+                    onclick={showCommitMenu}
+                ></button>
+            </div>
+        </div>
+        <p class="commit-hint" aria-live="polite">{commitActionDescription}</p>
+    </footer>
 </main>
 
 <style lang="scss">
+    .git-view {
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+        color: var(--text-normal);
+        background: var(--background-secondary);
+        font-family: var(--font-interface);
+    }
+
+    .nav-header {
+        flex: 0 0 auto;
+        padding: var(--size-4-3) var(--size-4-4);
+    }
+
+    h2 {
+        margin: 0 0 var(--size-4-2);
+        font-size: var(--font-ui-small);
+        font-weight: var(--font-semibold);
+    }
+
+    .nav-buttons-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: var(--size-2-1);
+    }
+
+    .nav-action-button {
+        margin: 0;
+        padding: var(--size-4-1);
+    }
+
+    button.clickable-icon {
+        height: auto;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    button:focus-visible {
+        outline: 2px solid var(--interactive-accent);
+        outline-offset: 2px;
+    }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .status-summary {
+        flex: 0 0 auto;
+        margin: 0 var(--size-4-4) var(--size-4-3);
+        padding: var(--size-4-3);
+        border: 1px solid var(--background-modifier-border);
+        border-radius: var(--radius-m);
+        background: var(--background-primary);
+    }
+
+    .summary-title {
+        display: flex;
+        align-items: center;
+        gap: var(--size-4-2);
+        font-size: var(--font-ui-small);
+
+        strong {
+            font-weight: var(--font-medium);
+        }
+    }
+
+    .status-dot {
+        flex: 0 0 auto;
+        width: var(--size-2-3);
+        height: var(--size-2-3);
+        border-radius: 50%;
+        background: var(--text-accent);
+    }
+
+    .needs-attention {
+        border-color: var(--text-warning);
+
+        .summary-title {
+            color: var(--text-warning);
+        }
+
+        .status-dot {
+            background: var(--text-warning);
+        }
+    }
+
+    .merge-help {
+        display: block;
+        width: 100%;
+        height: auto;
+        margin-top: var(--size-4-2);
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+        background: transparent;
+        color: var(--text-muted);
+        text-align: start;
+        white-space: normal;
+        line-height: 1.6;
+        font-size: var(--font-smallest);
+    }
+
+    .summary-metrics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--size-4-1) var(--size-4-3);
+        margin-top: var(--size-4-2);
+        padding-top: var(--size-4-2);
+        border-top: 1px solid var(--background-modifier-border);
+        color: var(--text-muted);
+        font-size: var(--font-smallest);
+        font-variant-numeric: tabular-nums;
+
+        b {
+            color: var(--text-normal);
+            font-weight: var(--font-medium);
+        }
+    }
+
+    .conflict-metric,
+    .conflict-metric b {
+        color: var(--text-warning);
+    }
+
+    .remote-metric {
+        flex-basis: 100%;
+    }
+
+    .nav-files-container {
+        position: relative;
+        flex: 1 1 0;
+        min-height: 0;
+        overflow: auto;
+        padding: 0 var(--size-4-2) var(--size-4-3);
+    }
+
+    .git-view .nav-files-container :global(.tree-item-self) {
+        min-height: 30px;
+        margin-bottom: 0;
+        padding-block: var(--size-4-1);
+        gap: var(--size-4-2);
+        font-size: var(--font-ui-small);
+    }
+
+    .git-view .nav-files-container :global(.nav-file-title) {
+        padding-block: var(--size-4-2);
+    }
+
+    .git-view .nav-files-container :global(.git-tools) {
+        flex-shrink: 0;
+        align-items: center;
+        gap: var(--size-4-1);
+    }
+
+    .git-view .nav-files-container :global(.git-tools .clickable-icon) {
+        min-width: 22px;
+        min-height: 24px;
+        padding: var(--size-2-1);
+    }
+
+    .git-view .nav-files-container :global(.git-tools .type) {
+        min-width: 2ch;
+        width: auto;
+        font-family: var(--font-monospace);
+        font-size: var(--font-smallest);
+        color: var(--text-muted);
+    }
+
+    .git-view .nav-files-container :global(.type[data-type="M"]) {
+        color: var(--git-change, var(--text-warning));
+    }
+
+    .git-view .nav-files-container :global(.type[data-type="A"]),
+    .git-view .nav-files-container :global(.type[data-type="?"]) {
+        color: var(--git-insert, var(--text-success));
+    }
+
+    .git-view .nav-files-container :global(.type[data-type="D"]) {
+        color: var(--git-delete, var(--text-error));
+    }
+
+    .commit-box {
+        flex: 0 0 auto;
+        min-width: 0;
+        padding: var(--size-4-3) var(--size-4-4);
+        border-top: 1px solid var(--background-modifier-border);
+        background: var(--background-secondary);
+    }
+
+    .commit-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--size-4-2);
+        margin-top: var(--size-4-2);
+    }
+
+    .commit-primary {
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        justify-content: center;
+        gap: var(--size-4-2);
+        height: auto;
+        min-height: var(--input-height);
+        white-space: normal;
+        font-size: var(--font-ui-small);
+    }
+
+    .commit-hint {
+        margin: var(--size-4-2) 0 0;
+        color: var(--text-muted);
+        font-size: var(--font-smallest);
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
     .repository-missing {
         > .nav-header,
-        > .git-commit-msg,
+        > .status-summary,
+        > .commit-box,
         > .nav-files-container {
             display: none;
         }
@@ -973,23 +1316,34 @@
 
     .commit-action-group {
         display: inline-flex;
-        flex: 0 0 auto;
+        flex: 1 1 auto;
         gap: 0;
-        overflow: hidden;
         border: 1px solid var(--background-modifier-border);
         border-radius: var(--radius-s);
 
-        .nav-action-button {
+        button {
             margin: 0;
+            height: auto;
+            border: 0;
             border-radius: 0;
+            box-shadow: none;
+            white-space: normal;
+            font-size: var(--font-ui-small);
         }
 
-        .nav-action-button + .nav-action-button {
-            border-left: 1px solid var(--background-modifier-border);
+        #commit-btn {
+            flex: 1;
+            min-width: 0;
+            padding: var(--size-4-1) var(--size-4-2);
+            background: transparent;
+        }
+
+        button + button {
+            border-inline-start: 1px solid var(--background-modifier-border);
         }
 
         #commit-menu {
-            width: var(--size-4-5);
+            flex: 0 0 var(--size-4-6);
             padding-right: 0;
             padding-left: 0;
         }
@@ -1000,18 +1354,24 @@
     }
 
     .commit-msg-input {
+        display: block;
+        box-sizing: border-box;
         width: 100%;
-        overflow: hidden;
+        max-height: 10em;
+        overflow: auto;
         resize: none;
-        padding: 7px 5px;
+        padding: var(--size-4-2);
+        padding-inline-end: var(--size-4-7);
+        font-size: var(--font-ui-small);
+        line-height: 1.6;
         background-color: var(--background-modifier-form-field);
     }
 
     .git-commit-msg {
         position: relative;
         padding: 0;
-        width: calc(100% - var(--size-4-8));
-        margin: 4px auto;
+        width: 100%;
+        margin: 0;
     }
 
     .conflicts {
@@ -1046,8 +1406,12 @@
     main {
         .git-tools {
             .files-count {
-                padding-left: var(--size-2-1);
-                width: 11px;
+                padding: 0 var(--size-4-1);
+                min-width: 2ch;
+                border-radius: var(--radius-s);
+                background: var(--background-modifier-hover);
+                font-size: var(--font-smallest);
+                font-variant-numeric: tabular-nums;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -1065,13 +1429,14 @@
         border-radius: 50%;
         color: var(--search-clear-button-color);
         cursor: var(--cursor);
-        top: -4px;
-        right: 2px;
-        bottom: 0px;
+        top: var(--size-4-1);
+        inset-inline-end: var(--size-4-1);
         line-height: 0;
         height: var(--input-height);
         width: 28px;
-        margin: auto;
+        margin: 0;
+        border: 0;
+        box-shadow: none;
         padding: 0 0;
         text-align: center;
         display: flex;

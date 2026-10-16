@@ -251,6 +251,262 @@ describe("AutomaticsManager 四种触发", () => {
     });
 });
 
+describe("AutomaticsManager 调度失效保护", () => {
+    const modes = [
+        { type: "commit", interval: "autoSaveInterval", debounce: false },
+        { type: "commit", interval: "autoSaveInterval", debounce: true },
+        { type: "push", interval: "autoPushInterval", debounce: false },
+        { type: "pull", interval: "autoPullInterval", debounce: false },
+    ] as const;
+
+    function setup(mode: (typeof modes)[number]) {
+        const plugin = createPlugin({
+            autoSaveInterval: 0,
+            differentIntervalCommitAndPush: mode.type === "push",
+            autoBackupAfterFileChange: mode.debounce,
+            [mode.interval]: 5,
+        });
+        const action =
+            mode.type === "commit"
+                ? plugin.gitActions.commitAndSync
+                : mode.type === "push"
+                  ? plugin.gitActions.push
+                  : plugin.gitActions.pullChangesFromRemote;
+        const save =
+            plugin.localStorage[
+                mode.type === "commit"
+                    ? "setLastAutoBackup"
+                    : mode.type === "push"
+                      ? "setLastAutoPush"
+                      : "setLastAutoPull"
+            ];
+        const manager = new AutomaticsManager(plugin as unknown as ObsidianGit);
+        return { plugin, manager, action, save };
+    }
+
+    function deferred<T>() {
+        let resolve!: (value: T) => void;
+        const promise = new Promise<T>((done) => {
+            resolve = done;
+        });
+        return { promise, resolve };
+    }
+
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it.each(modes)(
+        "执行中将 $interval 归零不重启循环（防抖 $debounce）",
+        async (mode) => {
+            const { plugin, manager, action, save } = setup(mode);
+            const pending = deferred<void>();
+            action.mockReturnValueOnce(pending.promise);
+            await manager.init();
+            plugin.autoCommitDebouncer?.();
+            await vi.advanceTimersByTimeAsync(5 * 60000);
+            expect(action).toHaveBeenCalledTimes(1);
+
+            plugin.settings[mode.interval] = 0;
+            pending.resolve();
+            await vi.advanceTimersByTimeAsync(60 * 60000);
+
+            expect(action).toHaveBeenCalledTimes(1);
+            expect(save).not.toHaveBeenCalled();
+            expect(vi.getTimerCount()).toBe(0);
+            manager.unload();
+        }
+    );
+
+    it("执行中关闭独立推送模式，不再安排推送", async () => {
+        const { plugin, manager, action, save } = setup(modes[2]);
+        const pending = deferred<void>();
+        action.mockReturnValueOnce(pending.promise);
+        await manager.init();
+        await vi.advanceTimersByTimeAsync(5 * 60000);
+        plugin.settings.differentIntervalCommitAndPush = false;
+        pending.resolve();
+        await vi.advanceTimersByTimeAsync(60 * 60000);
+        expect(action).toHaveBeenCalledTimes(1);
+        expect(save).not.toHaveBeenCalled();
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it.each(modes)(
+        "reload 后旧 $type 完成回调不覆盖新调度（防抖 $debounce）",
+        async (mode) => {
+            const { plugin, manager, action, save } = setup(mode);
+            const pending = deferred<void>();
+            action.mockReturnValueOnce(pending.promise);
+            await manager.init();
+            plugin.autoCommitDebouncer?.();
+            await vi.advanceTimersByTimeAsync(5 * 60000);
+            plugin.settings[mode.interval] = 10;
+            manager.reload(mode.type);
+            const newDebouncer = plugin.autoCommitDebouncer;
+            newDebouncer?.();
+            pending.resolve();
+            await vi.advanceTimersByTimeAsync(0);
+
+            expect(save).not.toHaveBeenCalled();
+            expect(plugin.autoCommitDebouncer).toBe(newDebouncer);
+            expect(vi.getTimerCount()).toBe(1);
+            await vi.advanceTimersByTimeAsync(10 * 60000);
+            expect(action).toHaveBeenCalledTimes(2);
+            expect(save).toHaveBeenCalledTimes(1);
+            manager.unload();
+        }
+    );
+
+    it.each(modes)(
+        "unload 后执行中的 $type 不恢复调度（防抖 $debounce）",
+        async (mode) => {
+            const { plugin, manager, action, save } = setup(mode);
+            const pending = deferred<void>();
+            action.mockReturnValueOnce(pending.promise);
+            await manager.init();
+            plugin.autoCommitDebouncer?.();
+            await vi.advanceTimersByTimeAsync(5 * 60000);
+            manager.unload();
+            pending.resolve();
+            await vi.advanceTimersByTimeAsync(60 * 60000);
+            expect(action).toHaveBeenCalledTimes(1);
+            expect(save).not.toHaveBeenCalled();
+            expect(plugin.autoCommitDebouncer).toBeUndefined();
+            expect(vi.getTimerCount()).toBe(0);
+        }
+    );
+
+    it.each(modes)(
+        "reload 后队列中的旧 $type 不执行（防抖 $debounce）",
+        async (mode) => {
+            const { plugin, manager, action, save } = setup(mode);
+            const queued: {
+                task: () => Promise<unknown>;
+                after?: (result: unknown) => void;
+            }[] = [];
+            plugin.promiseQueue.addTask = (task, after) => {
+                queued.push({ task, after });
+                return Promise.resolve();
+            };
+            await manager.init();
+            plugin.autoCommitDebouncer?.();
+            await vi.advanceTimersByTimeAsync(5 * 60000);
+            expect(queued).toHaveLength(1);
+            manager.reload(mode.type);
+            const item = queued[0]!;
+            item.after?.(await item.task());
+            expect(action).not.toHaveBeenCalled();
+            expect(save).not.toHaveBeenCalled();
+            manager.unload();
+        }
+    );
+
+    it.each(["pause", "conflict"] as const)(
+        "%s 期间 reload 使旧回调失效，恢复后仅运行新调度",
+        async (reason) => {
+            const { plugin, manager, action, save } = setup(modes[0]);
+            const pending = deferred<void>();
+            action.mockReturnValueOnce(pending.promise);
+            await manager.init();
+            await vi.advanceTimersByTimeAsync(5 * 60000);
+            const getter =
+                reason === "pause" ? "getPausedAutomatics" : "getConflict";
+            plugin.localStorage[getter] = () => true;
+            manager.reload("commit");
+            expect(vi.getTimerCount()).toBe(0);
+            plugin.localStorage[getter] = () => false;
+            manager.reload("commit");
+            pending.resolve();
+            await vi.advanceTimersByTimeAsync(0);
+            expect(save).not.toHaveBeenCalled();
+            expect(vi.getTimerCount()).toBe(1);
+            await vi.advanceTimersByTimeAsync(5 * 60000);
+            expect(action).toHaveBeenCalledTimes(2);
+            manager.unload();
+        }
+    );
+
+    it.each(["reload", "unload"] as const)(
+        "初始化等待提交时间时 %s，不允许过期初始化覆盖调度",
+        async (operation) => {
+            const plugin = createPlugin({
+                autoBackupAfterFileChange: false,
+                setLastSaveToLastCommit: true,
+                differentIntervalCommitAndPush: true,
+                autoPushInterval: 5,
+                autoPullInterval: 5,
+            });
+            const pending = deferred<Date | undefined>();
+            plugin.gitManager.getLastCommitTime = () => pending.promise;
+            const manager = new AutomaticsManager(
+                plugin as unknown as ObsidianGit
+            );
+            const initializing = manager.init();
+            if (operation === "reload") {
+                manager.reload("commit", "push", "pull");
+            } else {
+                manager.unload();
+            }
+            pending.resolve(new Date());
+            await initializing;
+            expect(
+                plugin.localStorage.setLastAutoBackup
+            ).not.toHaveBeenCalled();
+            expect(vi.getTimerCount()).toBe(operation === "reload" ? 3 : 0);
+            manager.unload();
+        }
+    );
+
+    it("执行任务等待提交时间时 reload，不执行旧提交或改写调度", async () => {
+        const { plugin, manager, action, save } = setup(modes[0]);
+        await manager.init();
+        plugin.settings.setLastSaveToLastCommit = true;
+        const pending = deferred<Date | undefined>();
+        plugin.gitManager.getLastCommitTime = () => pending.promise;
+        await vi.advanceTimersByTimeAsync(5 * 60000);
+        manager.reload("commit");
+        pending.resolve(new Date());
+        await vi.advanceTimersByTimeAsync(0);
+        expect(action).not.toHaveBeenCalled();
+        expect(save).not.toHaveBeenCalled();
+        expect(vi.getTimerCount()).toBe(1);
+        manager.unload();
+    });
+
+    it("仅 reload 提交不使正在执行的推送失效", async () => {
+        const { manager, action, save } = setup(modes[2]);
+        const pending = deferred<void>();
+        action.mockReturnValueOnce(pending.promise);
+        await manager.init();
+        await vi.advanceTimersByTimeAsync(5 * 60000);
+        manager.reload("commit");
+        pending.resolve();
+        await vi.advanceTimersByTimeAsync(0);
+        expect(save).toHaveBeenCalledTimes(1);
+        expect(vi.getTimerCount()).toBe(1);
+        await vi.advanceTimersByTimeAsync(5 * 60000);
+        expect(action).toHaveBeenCalledTimes(2);
+        manager.unload();
+    });
+
+    it.each(modes)(
+        "正间隔已到期时允许 $type 零延迟执行（防抖 $debounce）",
+        async (mode) => {
+            const { plugin, manager, action } = setup(mode);
+            const overdue = new Date(Date.now() - 10 * 60000).toString();
+            plugin.localStorage.getLastAutoBackup = () => overdue;
+            plugin.localStorage.getLastAutoPush = () => overdue;
+            plugin.localStorage.getLastAutoPull = () => overdue;
+            await manager.init();
+            await vi.advanceTimersByTimeAsync(0);
+            expect(action).toHaveBeenCalledTimes(1);
+            await vi.advanceTimersByTimeAsync(1);
+            expect(action).toHaveBeenCalledTimes(1);
+            manager.unload();
+        }
+    );
+});
+
 describe("AutomaticsManager auto commit-and-sync after file edits", () => {
     it("commits an edit made during a run exactly once, via the active debouncer", async () => {
         const plugin = createFakePlugin();
