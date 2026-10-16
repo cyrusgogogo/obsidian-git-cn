@@ -287,6 +287,24 @@ const zh: Record<string, string> = {
     Reload: "重载",
 
     // 同步触发
+    "Automatic sync": "自动同步",
+    "Focus on writing; configure when Git runs below.":
+        "专注写作，在下方配置 Git 的执行时机。",
+    "Repository summary": "仓库摘要",
+    "Branch: {branch} · Remotes: {remotes}": "分支：{branch} · 远端：{remotes}",
+    "No current branch": "无当前分支",
+    "Repository summary unavailable": "暂时无法读取仓库摘要",
+    "Manual sync": "手动同步",
+    "Manual sync is always available from commands. It follows the pull and push preferences; it has no separate enable switch.":
+        "可随时通过命令手动同步，遵循拉取与推送偏好；当前没有独立的启用开关。",
+    "Scheduled execution": "定时执行",
+    "Zero disables each timer. The commit interval follows the editing or fixed-interval preference. A separate push timer requires split timers.":
+        "各间隔设为 0 即关闭。提交间隔遵循停止编辑或固定间隔偏好；独立推送定时器需要开启分离计时器。",
+    "Pull on opening the vault": "启动时拉取",
+    "Push after commit-and-sync": "提交并同步后推送",
+    "This controls push in commit-and-sync, not every manual commit. Split automatic commits do not push; use the separate push timer.":
+        "此开关控制“提交并同步”中的推送，并非每次手动提交。分离模式下自动提交不推送，请使用独立推送定时器。",
+    "Automatic commit preferences": "自动提交偏好",
     "Split timers for automatic commit and sync": "分离自动提交与同步的定时器",
     "Enable to use one interval for commit and another for sync.":
         "开启后，为自动提交与同步使用不同间隔。",
@@ -317,6 +335,15 @@ const zh: Record<string, string> = {
         "将弹出窗口让你填写提交信息。",
 
     // 拉取策略
+    "Local change protection": "本地修改保护",
+    "Merge preserves both histories. Local changes are protected before pulling; conflicts pause automatic routines. Stash is protection, not a pull strategy.":
+        "merge 保留双方历史。拉取前先保护本地修改；出现冲突时暂停自动任务。stash 是保护机制，不是拉取策略。",
+    "Rebase protects local changes first. Resolve rebase conflicts with native Git, or abort the rebase before resuming sync.":
+        "rebase 前先保护本地修改。变基冲突需使用原生 Git 解决，或中止变基后再恢复同步。",
+    "Reset backs up local history and uses --keep. It refuses to overwrite local changes; it does not silently discard the working tree.":
+        "reset 先备份本地历史，再使用 --keep 对齐远端；可能覆盖本地修改时拒绝执行，不会静默丢弃工作区。",
+    "Mobile Git uses merge. Desktop rebase and reset preferences do not apply.":
+        "移动端 Git 使用 merge，桌面端的 rebase 和 reset 偏好不适用。",
     "Pull strategy": "拉取策略",
     "Decide how to integrate commits from your remote branch into your local branch.":
         "决定如何把远端分支的提交整合进本地分支。",

@@ -6,12 +6,12 @@
     import {
         fileIsBinary,
         fileOpenableInObsidian,
-        getDisplayPath,
         getNewLeaf,
         getTooltipSide,
         mayTriggerFileMenu,
     } from "src/utils";
     import type GitView from "../sourceControl";
+    import FileLabel from "./fileLabel.svelte";
 
     interface Props {
         change: FileStatusResult;
@@ -99,9 +99,7 @@
         data-tooltip-position={side}
         aria-label={change.vaultPath}
     >
-        <div class="tree-item-inner nav-file-title-content">
-            {getDisplayPath(change.vaultPath)}
-        </div>
+        <FileLabel path={change.vaultPath} />
         <div class="git-tools">
             <div class="buttons">
                 {#if fileOpenableInObsidian(change.vaultPath, view.app)}

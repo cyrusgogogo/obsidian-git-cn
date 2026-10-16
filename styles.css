@@ -90,10 +90,10 @@
 }
 
 .git-tools .type[data-type="M"] {
-    color: orange;
+    color: var(--color-orange);
 }
 .git-tools .type[data-type="D"] {
-    color: red;
+    color: var(--color-red);
 }
 .git-tools .buttons {
     display: flex;
@@ -128,6 +128,136 @@
 
 .git-date {
     color: var(--text-accent);
+}
+
+/* 设置卡片只使用宿主变量，不影响其他插件或自定义主题。 */
+.git-settings-trigger-card,
+.git-settings-automatic-preferences,
+.git-settings-pull-strategy {
+    padding: var(--size-4-4);
+    margin-block: var(--size-4-4);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-l);
+    background: var(--background-primary);
+    min-width: 0;
+}
+
+.git-settings-trigger-card .setting-item,
+.git-settings-automatic-preferences .setting-item,
+.git-settings-pull-strategy .setting-item {
+    gap: var(--size-4-4);
+    padding-block: var(--size-4-3);
+}
+
+.git-settings-trigger-card .setting-item-name,
+.git-settings-automatic-preferences .setting-item-name,
+.git-settings-pull-strategy .setting-item-name {
+    font-size: var(--font-ui-small);
+    font-weight: var(--font-medium);
+}
+
+.git-settings-trigger-card .setting-item-description,
+.git-settings-automatic-preferences .setting-item-description,
+.git-settings-pull-strategy .setting-item-description {
+    font-size: var(--font-ui-smaller);
+    line-height: 1.7;
+    color: var(--text-muted);
+}
+
+.git-settings-trigger-card .setting-item-heading,
+.git-settings-automatic-preferences .setting-item-heading,
+.git-settings-pull-strategy .setting-item-heading {
+    padding-top: 0;
+    border: 0;
+}
+
+.git-settings-trigger-card .setting-item-control {
+    flex-shrink: 0;
+}
+
+.git-settings-trigger-card input[type="number"],
+.git-settings-trigger-card input[type="text"] {
+    width: 5em;
+    text-align: center;
+}
+
+.git-settings-trigger-boot,
+.git-settings-trigger-push {
+    border-color: color-mix(
+        in srgb,
+        var(--interactive-accent) 25%,
+        var(--background-modifier-border)
+    );
+}
+
+.git-settings-repository-summary {
+    padding: var(--size-4-4);
+    margin-block: var(--size-4-5);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-l);
+    background: var(--background-secondary);
+}
+
+.git-settings-repository-summary .setting-item-name {
+    font-weight: var(--font-semibold);
+}
+
+.git-settings-repository-summary .setting-item-description {
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-smaller);
+    overflow-wrap: anywhere;
+}
+
+.git-settings-safety-note {
+    padding: var(--size-4-3);
+    margin-top: var(--size-4-3);
+    border: 0;
+    border-left: 2px solid var(--interactive-accent);
+    border-radius: var(--radius-s);
+    background: var(--background-secondary);
+}
+
+.git-settings-safety-note .setting-item-name {
+    color: var(--text-accent);
+}
+
+.git-settings-safety-note .setting-item-description {
+    font-size: var(--font-ui-smaller);
+    line-height: 1.8;
+}
+
+@media (max-width: 600px) {
+    .git-settings-trigger-card .setting-item,
+    .git-settings-automatic-preferences .setting-item,
+    .git-settings-pull-strategy .setting-item {
+        flex-wrap: wrap;
+    }
+
+    .git-settings-trigger-card .setting-item-info,
+    .git-settings-automatic-preferences .setting-item-info,
+    .git-settings-pull-strategy .setting-item-info {
+        flex-basis: 100%;
+        min-width: 0;
+    }
+
+    .git-settings-trigger-card .setting-item-control,
+    .git-settings-automatic-preferences .setting-item-control,
+    .git-settings-pull-strategy .setting-item-control {
+        justify-content: flex-start;
+        margin-top: var(--size-4-2);
+        max-width: 100%;
+    }
+
+    .git-settings-automatic-preferences textarea,
+    .git-settings-pull-strategy select {
+        max-width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .workspace-leaf-content[data-type="git-view"] .loading > svg {
+        animation: none;
+    }
 }
 
 .git-ref {
