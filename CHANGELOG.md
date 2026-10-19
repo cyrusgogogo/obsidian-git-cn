@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.0](https://github.com/cyrusgogogo/obsidian-git-cn/releases/tag/1.1.0) (2026-10-19)
+
+本 fork 的第二个正式版本，跟进上游至 `af0a934`（包含 v2.41.1 及后续修复）。下方 2.x 版本号为上游历史，本插件继续使用独立版本线。
+
+- 冲突处理：编辑器可选择双方内容，源码控制视图增加冲突分区、标记已解决和合并帮助。
+- 历史与差异：可打开指定提交中的文件，支持差异计算超时，修复刷新中断、笔记库相对路径和 CRLF 行作者显示问题。
+- 提交与设置：提交按钮支持智能、仅暂存和全部改动模式，支持空索引自动暂存；设置迁移到 Obsidian 1.13 声明式 API，新增笔记库范围限制和变基自动暂存配置。
+- 同步安全：继续保留拉取前保护性提交、失败回滚和冲突暂停；加强推送参数、未推送历史压缩、子模块和差异保存的安全检查。
+- 中文化与认证：补全新增界面、设置和错误翻译；桌面认证改用本地 HTTP socket，凭据不再通过文件交换。
+- 验证：TypeScript、Svelte、格式、静态检查、316 项测试和生产构建通过。
+
+升级方式：BRAT 中更新 `cyrusgogogo/obsidian-git-cn`，然后重载插件。要求 Obsidian ≥1.13.1，仅支持桌面端；变基冲突仍需在终端执行 `git rebase --continue`，子模块自动同步暂不启用。
+
 ## [2.41.1](https://github.com/Vinzent03/obsidian-git/compare/2.41.0...2.41.1) (2026-10-02)
 
 ## [2.41.0](https://github.com/Vinzent03/obsidian-git/compare/2.40.0...2.41.0) (2026-10-01)

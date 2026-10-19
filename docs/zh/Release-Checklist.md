@@ -1,14 +1,15 @@
 # 发布前审计清单
 
-发布到 BRAT 或社区插件市场前逐项确认。
+发布到 BRAT 或社区插件市场前逐项确认。当前版本为 1.1.0（2026-10-19）。
 
 ## BRAT 分发
 
--   [x] 仓库根目录有 `manifest.json`（`pnpm run build` 后生成 `main.js`，两者齐备即可被 BRAT 拉取）
+-   [x] Release 工作流上传独立的 `main.js`、`manifest.json`、`styles.css`，供 BRAT 下载
 -   [x] `manifest.json` 的 `id` 为 `obsidian-git-cn`（不可再改，否则丢失用户配置）
 -   [x] `manifest.json` 的 `isDesktopOnly` 为 `true`
--   [x] 已生成 `versions.json`（`1.0.0` → `1.13.1`）
--   [x] 已打 tag `1.0.0`，Release 工作流生成 zip 与 GitHub Release（含 `main.js` / `manifest.json` / `styles.css`）
+-   [x] 已更新 `versions.json`（`1.0.0` / `1.1.0` → `1.13.1`）
+-   [x] Release 工作流校验 tag、`package.json`、`manifest.json` 与 `versions.json` 一致，固定 Node 24 / pnpm 11.25.0，使用锁文件安装
+-   [x] 1.0.0 已通过 tag 触发工作流发布；1.1.0 沿用该分发流程
 
 ## 元数据
 
@@ -33,7 +34,7 @@
 -   [x] `pnpm run tsc` 通过
 -   [x] `pnpm run svelte`（svelte-check）通过
 -   [x] `pnpm run lint` 与 `pnpm run format` 通过
--   [x] 单测通过；全量测试仅剩上游 8 个 Windows CRLF 已知失败（见 `docs/upstream.md`）
+-   [x] Linux / Node 24.19.0 / pnpm 11.25.0：20 个测试文件、316 项测试全部通过；Windows CRLF 已知限制见 `docs/upstream.md`
 
 ## 官方社区市场（仅准备，暂不提交）
 

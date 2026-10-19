@@ -40,7 +40,7 @@ bash install.sh "/path/to/your/vault"
 
 1. 在 Obsidian 社区插件市场搜索并安装启用 [BRAT](https://github.com/TfTHacker/obsidian42-brat)（Obsidian42-BRAT）。
 2. 打开「设置 → BRAT → Add Beta plugin」，输入仓库名 `cyrusgogogo/obsidian-git-cn` 并确认；BRAT 会自动把最新 [GitHub Release](https://github.com/cyrusgogogo/obsidian-git-cn/releases) 中的 `main.js`、`manifest.json`、`styles.css` 安装到你的笔记库。
-3. 重载 Obsidian，在「设置 → 第三方插件」中启用「Obsidian Git（中文版）」，确认版本显示为 `1.0.0`。
+3. 重载 Obsidian，在「设置 → 第三方插件」中启用「Obsidian Git（中文版）」，确认版本显示为 `1.1.0`（要求 Obsidian ≥1.13.1，仅支持桌面端）。
 4. 以后发布新版本时，在 BRAT 设置中点「Update」即可升级；插件上架官方社区市场后，也可删掉 BRAT 记录改走市场更新。
 
 网络提示：BRAT 直接从 GitHub 下载 Release 产物，与插件的 Git 认证配置相互独立；若访问 GitHub 受限，请先配置代理，或改用「方式三」手动构建。
