@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Obsidian Git CN 安装脚本（macOS / Linux）
+# Gitcn 安装脚本（macOS / Linux）
 # 用法：./install.sh "/path/to/your/vault"
 set -euo pipefail
 
@@ -26,4 +26,4 @@ mkdir -p "$PLUGIN_DIR"
 cp main.js manifest.json styles.css "$PLUGIN_DIR/"
 
 echo "已安装到：$PLUGIN_DIR"
-echo "请重启 Obsidian，并在「设置 → 第三方插件」中启用「Obsidian Git（中文版）」。"
+echo "请重启 Obsidian，并在「设置 → 第三方插件」中启用「Gitcn」。"

@@ -1,4 +1,4 @@
-# Obsidian Git CN 安装脚本（Windows）
+# Gitcn 安装脚本（Windows）
 # 用法：powershell -ExecutionPolicy Bypass -File .\install.ps1 -VaultPath "D:\你的笔记库"
 param(
     [Parameter(Mandatory = $true)]
@@ -29,4 +29,4 @@ Copy-Item `
     -Force
 
 Write-Host "已安装到：$PluginDir"
-Write-Host "请重启 Obsidian，并在「设置 → 第三方插件」中启用「Obsidian Git（中文版）」。"
+Write-Host "请重启 Obsidian，并在「设置 → 第三方插件」中启用「Gitcn」。"

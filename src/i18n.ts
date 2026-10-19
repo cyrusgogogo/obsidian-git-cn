@@ -12,7 +12,6 @@ const zh: Record<string, string> = {
     // 通用
     Language: "语言",
     "Display language of the plugin interface.": "插件界面的显示语言。",
-    "Obsidian Git": "Obsidian Git（中文版）",
     Sync: "同步",
     "{n} commits": "{n} 个提交",
     "Git is not ready. When all settings are correct you can configure commit-sync, etc.":
@@ -185,6 +184,9 @@ const zh: Record<string, string> = {
     "Pulled {n} file(s) from remote": "已从远端拉取 {n} 个文件",
     "Fetched from remote": "已从远端抓取",
     "No changes to commit": "没有需要提交的改动",
+    "Repository actions": "仓库操作",
+    "Changes will appear here as you edit your notes.":
+        "编辑笔记后，改动会显示在这里。",
     "Committed {n} file(s)": "已提交 {n} 个文件",
     "Committed approx. {n} file(s)": "已提交约 {n} 个文件",
     "Commit aborted: No commit message provided": "已中止提交：未提供提交信息",
@@ -600,8 +602,8 @@ const zh: Record<string, string> = {
     "Merge in progress. Select the merge icon for help resolving and finishing it.":
         "合并进行中。点击合并图标查看解决冲突与完成合并的帮助。",
     "Merge in progress - select for help": "合并进行中，点击查看帮助",
-    "Git is combining the version in your vault with changes from another version. The merge must be committed before Obsidian Git can push or resume automatic commits.":
-        "Git 正在将 Vault 中的版本与另一版本的改动合并。必须先提交此次合并，Obsidian Git 才能推送或恢复自动提交。",
+    "Git is combining the version in your vault with changes from another version. The merge must be committed before Gitcn can push or resume automatic commits.":
+        "Git 正在将 Vault 中的版本与另一版本的改动合并。必须先提交此次合并，Gitcn 才能推送或恢复自动提交。",
     "Resolve the conflicts": "解决冲突",
     "Git could not combine some parts automatically. Open each conflicted file and review every highlighted conflict block.":
         "Git 无法自动合并部分内容。请打开每个冲突文件，逐一检查高亮的冲突块。",

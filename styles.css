@@ -77,6 +77,321 @@
     flex-wrap: wrap;
 }
 
+/* 源码控制面板使用独立布局类，避免主题的通用导航样式拆散按钮组。 */
+.gitcn-source-control {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.gitcn-source-control .gitcn-header {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px 6px;
+}
+
+.gitcn-source-control .gitcn-title {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-normal);
+    font-size: var(--font-ui-small);
+    font-weight: var(--font-semibold);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gitcn-source-control .gitcn-toolbar {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 2px;
+}
+
+.gitcn-source-control .gitcn-icon-button {
+    display: inline-flex;
+    flex: 0 0 28px;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-muted);
+}
+
+.gitcn-source-control .gitcn-icon-button:hover {
+    background: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+.gitcn-source-control button span[data-icon] {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+}
+
+.gitcn-source-control button svg {
+    width: 16px;
+    height: 16px;
+}
+
+.gitcn-source-control .gitcn-toolbar-divider {
+    width: 1px;
+    height: 14px;
+    margin: 0 4px;
+    background: var(--background-modifier-border);
+}
+
+.gitcn-source-control .has-unpushed {
+    color: var(--text-accent);
+}
+
+.gitcn-source-control .gitcn-composer {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 12px 14px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.gitcn-source-control .gitcn-message-field {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-primary);
+}
+
+.gitcn-source-control .gitcn-message-field:focus-within {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.gitcn-source-control textarea.gitcn-message-input {
+    display: block;
+    width: 100%;
+    min-height: 76px;
+    max-height: 160px;
+    margin: 0;
+    padding: 10px 34px 10px 10px;
+    overflow: auto;
+    resize: none;
+    border: 0;
+    border-radius: 0;
+    outline: none;
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-normal);
+    font-family: var(--font-interface);
+    font-size: var(--font-ui-small);
+    line-height: 1.6;
+}
+
+.gitcn-source-control .gitcn-clear-message {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    color: var(--text-faint);
+}
+
+.gitcn-source-control .gitcn-commit-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+}
+
+.gitcn-source-control .gitcn-commit-actions button {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    margin: 0;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 6px;
+    box-shadow: none;
+    font-size: var(--font-ui-small);
+    font-weight: var(--font-medium);
+    white-space: nowrap;
+}
+
+.gitcn-source-control .gitcn-sync-button {
+    min-width: 0;
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.gitcn-source-control .gitcn-sync-button:hover:not(:disabled) {
+    background: var(--interactive-accent-hover);
+}
+
+.gitcn-source-control .gitcn-commit-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow: hidden;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+}
+
+.gitcn-source-control .gitcn-commit-group button {
+    height: 30px;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-normal);
+}
+
+.gitcn-source-control .gitcn-commit-group button:hover:not(:disabled) {
+    background: var(--background-modifier-hover);
+}
+
+.gitcn-source-control .gitcn-commit-group .gitcn-menu-button {
+    width: 28px;
+    padding: 0;
+    border-left: 1px solid var(--background-modifier-border);
+}
+
+.gitcn-source-control .gitcn-commit-actions button:disabled {
+    cursor: default;
+    opacity: 0.45;
+}
+
+.gitcn-source-control .gitcn-merge-status {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    height: auto;
+    padding: 6px 8px;
+    background: var(--background-primary);
+    box-shadow: none;
+    color: var(--text-warning);
+    font-size: var(--font-ui-smaller);
+    text-align: start;
+    white-space: normal;
+}
+
+.gitcn-source-control > .nav-files-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 8px 10px 16px;
+    overflow: auto;
+}
+
+.gitcn-source-control .mod-root > .tree-item + .tree-item {
+    margin-top: 8px;
+}
+
+.gitcn-source-control .nav-folder-title {
+    min-height: 32px;
+    align-items: center;
+}
+
+.gitcn-source-control .mod-root > .tree-item > .nav-folder-title,
+.gitcn-source-control .conflicts > .nav-folder-title {
+    font-size: var(--font-ui-smaller);
+    font-weight: var(--font-semibold);
+}
+
+.gitcn-source-control .git-tools {
+    align-items: center;
+    gap: 6px;
+}
+
+.gitcn-source-control .git-tools .files-count {
+    display: inline-flex;
+    order: -1;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--background-modifier-hover);
+    color: var(--text-muted);
+    font-size: var(--font-ui-smaller);
+    font-variant-numeric: tabular-nums;
+}
+
+.gitcn-source-control .git-tools .buttons {
+    gap: 4px;
+}
+
+.gitcn-source-control .git-tools .buttons > .clickable-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+}
+
+.gitcn-source-control .gitcn-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 32px 12px;
+    color: var(--text-faint);
+    font-size: var(--font-ui-smaller);
+    text-align: center;
+}
+
+.gitcn-source-control .gitcn-empty-state svg {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 4px;
+}
+
+.gitcn-source-control .gitcn-empty-state p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--font-ui-small);
+}
+
+.gitcn-source-control .repository-notice {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.gitcn-source-control .repository-notice p {
+    margin: 0;
+}
+
+.gitcn-source-control .repository-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.gitcn-source-control.repository-missing > .gitcn-header,
+.gitcn-source-control.repository-missing > .gitcn-composer,
+.gitcn-source-control.repository-missing > .nav-files-container {
+    display: none;
+}
+
 .git-tools {
     display: flex;
     margin-left: auto;

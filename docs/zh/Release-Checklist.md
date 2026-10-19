@@ -1,15 +1,15 @@
 # 发布前审计清单
 
-发布到 BRAT 或社区插件市场前逐项确认。当前版本为 1.1.0（2026-10-19）。
+发布到 BRAT 或社区插件市场前逐项确认。当前版本为 1.1.1（2026-10-19）。
 
 ## BRAT 分发
 
 -   [x] Release 工作流上传独立的 `main.js`、`manifest.json`、`styles.css`，供 BRAT 下载
 -   [x] `manifest.json` 的 `id` 为 `obsidian-git-cn`（不可再改，否则丢失用户配置）
 -   [x] `manifest.json` 的 `isDesktopOnly` 为 `true`
--   [x] 已更新 `versions.json`（`1.0.0` / `1.1.0` → `1.13.1`）
+-   [x] 已更新 `versions.json`（`1.0.0` / `1.1.0` / `1.1.1` → `1.13.1`）
 -   [x] Release 工作流校验 tag、`package.json`、`manifest.json` 与 `versions.json` 一致，固定 Node 24 / pnpm 11.25.0，使用锁文件安装
--   [x] 1.0.0 已通过 tag 触发工作流发布；1.1.0 沿用该分发流程
+-   [x] 1.0.0 已通过 tag 触发工作流发布；后续版本沿用该分发流程
 
 ## 元数据
 
@@ -38,7 +38,7 @@
 
 ## 官方社区市场（仅准备，暂不提交）
 
--   [x] 市场文案就绪：名称「Obsidian Git（中文版）」、中文描述、`id=obsidian-git-cn`
+-   [x] 市场文案就绪：名称「Gitcn」、中文描述、`id=obsidian-git-cn`
 -   [x] `minAppVersion` 与 `versions.json` 就绪
 -   [x] GitHub Release 自动化就绪（tag 触发构建、zip、Release）
 -   [ ] 真实上架：向 obsidianmd/obsidian-releases 提交 PR（本次暂不执行）

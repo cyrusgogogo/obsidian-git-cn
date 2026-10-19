@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.1](https://github.com/cyrusgogogo/obsidian-git-cn/releases/tag/1.1.1) (2026-10-19)
+
+- 插件显示名称改为 **Gitcn**，同步更新安装提示与文档；插件 ID 仍为 `obsidian-git-cn`，保留现有配置和 BRAT 更新关系。
+- 重排源码控制面板：远端与视图操作保持水平排列，提交输入框与同步 / 提交按钮独立分区，修复主题样式导致按钮组竖排的问题。
+- 简化文件分组与计数，没有待提交改动时显示空状态；适配浅色、深色与窄侧栏，主操作支持键盘访问。
+- 本次仅调整界面和名称，Git 同步、冲突保护及凭据处理逻辑保持不变。
+
 ## [1.1.0](https://github.com/cyrusgogogo/obsidian-git-cn/releases/tag/1.1.0) (2026-10-19)
 
 本 fork 的第二个正式版本，跟进上游至 `af0a934`（包含 v2.41.1 及后续修复）。下方 2.x 版本号为上游历史，本插件继续使用独立版本线。

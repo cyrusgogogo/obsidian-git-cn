@@ -1,6 +1,6 @@
 <script lang="ts">
     import { t } from "src/i18n";
-    import { Menu, Platform, Scope, setIcon } from "obsidian";
+    import { Menu, Scope, setIcon } from "obsidian";
     import { SOURCE_CONTROL_VIEW_CONFIG } from "src/constants";
     import type ObsidianGit from "src/main";
     import type {
@@ -126,28 +126,6 @@
     $effect(() => {
         buttons.forEach((btn) => {
             if (btn) setIcon(btn, btn.getAttr("data-icon")!);
-        });
-    });
-
-    $effect(() => {
-        // highlight push button if there are unpushed commits
-        buttons.forEach((btn) => {
-            // when reloading the view from settings change, the btn are null at first
-            if (!btn || btn.id != "push") return;
-            if (Platform.isMobile) {
-                btn.removeClass("button-border");
-                if (unPushedCommits > 0) {
-                    btn.addClass("button-border");
-                }
-            } else {
-                btn.firstElementChild?.removeAttribute("color");
-                if (unPushedCommits > 0) {
-                    btn.firstElementChild?.setAttr(
-                        "color",
-                        "var(--text-accent)"
-                    );
-                }
-            }
         });
     });
 
@@ -429,7 +407,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <main
     data-type={SOURCE_CONTROL_VIEW_CONFIG.type}
-    class="git-view"
+    class="git-view gitcn-source-control"
     class:repository-missing={repositoryMissing}
 >
     {#if repositoryMissing}
@@ -452,121 +430,181 @@
             </div>
         </div>
     {/if}
-    <div class="nav-header">
-        <div class="nav-buttons-container">
-            <div class="commit-action-group">
-                <div
-                    id="backup-btn"
-                    data-icon="arrow-up-circle"
-                    class="clickable-icon nav-action-button"
-                    class:is-disabled={commitAndSyncDisabled}
-                    aria-label={commitAndSyncActionDescription}
-                    aria-disabled={commitAndSyncDisabled}
-                    bind:this={buttons[0]}
-                    onclick={() => commitAndSync()}
-                ></div>
-                <div
-                    id="commit-btn"
-                    data-icon="check"
-                    class="clickable-icon nav-action-button"
-                    class:is-disabled={commitDisabled}
-                    aria-label={commitActionDescription}
-                    aria-disabled={commitDisabled}
-                    bind:this={buttons[1]}
-                    onclick={() => commit()}
-                ></div>
-                <div
-                    id="commit-menu"
-                    data-icon="chevron-down"
-                    class="clickable-icon nav-action-button"
-                    aria-label={t("More commit actions")}
-                    bind:this={buttons[10]}
-                    onclick={showCommitMenu}
-                ></div>
-            </div>
-            <div
-                id="stage-all"
-                class="clickable-icon nav-action-button"
-                data-icon="plus-circle"
-                aria-label={t("Stage all")}
-                bind:this={buttons[2]}
-                onclick={stageAll}
-            ></div>
-            <div
-                id="unstage-all"
-                class="clickable-icon nav-action-button"
-                data-icon="minus-circle"
-                aria-label={t("Unstage all")}
-                bind:this={buttons[3]}
-                onclick={unstageAll}
-            ></div>
-            <div
+    <div class="gitcn-header">
+        <span class="gitcn-title">{plugin.manifest.name}</span>
+        <div
+            class="gitcn-toolbar"
+            role="toolbar"
+            aria-label={t("Repository actions")}
+        >
+            <button
+                type="button"
                 id="push"
-                class="clickable-icon nav-action-button"
-                data-icon="upload"
+                class="clickable-icon gitcn-icon-button"
+                class:has-unpushed={unPushedCommits > 0}
                 aria-label={t("Push")}
-                bind:this={buttons[4]}
                 onclick={push}
-            ></div>
-            <div
+                ><span
+                    data-icon="upload"
+                    bind:this={buttons[4]}
+                    aria-hidden="true"
+                ></span></button
+            >
+            <button
+                type="button"
                 id="pull"
-                class="clickable-icon nav-action-button"
-                data-icon="download"
+                class="clickable-icon gitcn-icon-button"
                 aria-label={t("Pull")}
-                bind:this={buttons[5]}
                 onclick={pull}
-            ></div>
-            <div
+                ><span
+                    data-icon="download"
+                    bind:this={buttons[5]}
+                    aria-hidden="true"
+                ></span></button
+            >
+            <span class="gitcn-toolbar-divider" aria-hidden="true"></span>
+            <button
+                type="button"
                 id="layoutChange"
-                class="clickable-icon nav-action-button"
+                class="clickable-icon gitcn-icon-button"
                 aria-label={t("Change Layout")}
-                data-icon={showTree ? "list" : "folder"}
-                bind:this={buttons[6]}
                 onclick={() => {
                     showTree = !showTree;
-                    setIcon(buttons[6]!, showTree ? "list" : "folder");
+                    if (buttons[6])
+                        setIcon(buttons[6], showTree ? "list" : "folder");
                     plugin.settings.treeStructure = showTree;
                     void plugin.saveSettings();
                 }}
-            ></div>
-            <div
+                ><span
+                    data-icon={showTree ? "list" : "folder"}
+                    bind:this={buttons[6]}
+                    aria-hidden="true"
+                ></span></button
+            >
+            <button
+                type="button"
                 id="refresh"
-                class="clickable-icon nav-action-button"
-                class:loading
-                data-icon="refresh-cw"
+                class="clickable-icon gitcn-icon-button"
                 aria-label={t("Refresh")}
-                bind:this={buttons[7]}
                 onclick={triggerRefresh}
-            ></div>
-            {#if mergeInProgress}
-                <div
-                    id="merge-status"
-                    class="clickable-icon nav-action-button merge-status"
-                    data-icon="git-merge"
-                    aria-label={t("Merge in progress - select for help")}
-                    bind:this={buttons[11]}
-                    onclick={() => plugin.openMergeConflictHelp()}
-                ></div>
-            {/if}
+                ><span
+                    data-icon="refresh-cw"
+                    class:loading
+                    bind:this={buttons[7]}
+                    aria-hidden="true"
+                ></span></button
+            >
         </div>
     </div>
-    <div class="git-commit-msg">
-        <textarea
-            {rows}
-            class="commit-msg-input"
-            spellcheck="true"
-            placeholder={t("Commit Message")}
-            bind:value={commitMessage}></textarea>
-        {#if commitMessage}
-            <div
-                class="git-commit-msg-clear-button"
-                onclick={() => (commitMessage = "")}
-                aria-label={t("Clear")}
-            ></div>
+    <div class="gitcn-composer">
+        <div class="gitcn-message-field">
+            <textarea
+                {rows}
+                class="gitcn-message-input"
+                spellcheck="true"
+                aria-label={t("Commit Message")}
+                placeholder={t("Commit Message")}
+                bind:value={commitMessage}></textarea>
+            {#if commitMessage}
+                <button
+                    type="button"
+                    class="clickable-icon gitcn-icon-button gitcn-clear-message"
+                    onclick={() => (commitMessage = "")}
+                    aria-label={t("Clear")}
+                    ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                        ><path d="m6 6 12 12M6 18 18 6" /></svg
+                    ></button
+                >
+            {/if}
+        </div>
+        <div class="gitcn-commit-actions">
+            <button
+                type="button"
+                id="backup-btn"
+                class="mod-cta gitcn-sync-button"
+                disabled={commitAndSyncDisabled}
+                aria-label={commitAndSyncActionDescription}
+                onclick={() => commitAndSync()}
+                ><span
+                    data-icon="arrow-up-circle"
+                    bind:this={buttons[0]}
+                    aria-hidden="true"
+                ></span><span>{t("Sync")}</span></button
+            >
+            <div class="gitcn-commit-group">
+                <button
+                    type="button"
+                    id="commit-btn"
+                    class="gitcn-commit-button"
+                    disabled={commitDisabled}
+                    aria-label={commitActionDescription}
+                    onclick={() => commit()}
+                    ><span
+                        data-icon="check"
+                        bind:this={buttons[1]}
+                        aria-hidden="true"
+                    ></span><span>{t("Commit")}</span></button
+                >
+                <button
+                    type="button"
+                    id="commit-menu"
+                    class="gitcn-menu-button"
+                    aria-label={t("More commit actions")}
+                    onclick={showCommitMenu}
+                    ><span
+                        data-icon="chevron-down"
+                        bind:this={buttons[10]}
+                        aria-hidden="true"
+                    ></span></button
+                >
+            </div>
+        </div>
+        {#if mergeInProgress}
+            <button
+                type="button"
+                id="merge-status"
+                class="gitcn-merge-status"
+                aria-label={t("Merge in progress - select for help")}
+                onclick={() => plugin.openMergeConflictHelp()}
+                ><span
+                    data-icon="git-merge"
+                    bind:this={buttons[11]}
+                    aria-hidden="true"
+                ></span><span>{t("Merge in progress - select for help")}</span
+                ></button
+            >
         {/if}
     </div>
 
     <div class="nav-files-container" style="position: relative;">
+        {#if status && !hasChanges && !hasConflicts && !mergeInProgress && !loading}
+            <div class="gitcn-empty-state" role="status">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    ><circle cx="12" cy="12" r="9" /><path
+                        d="m8 12 2.5 2.5L16 9"
+                    /></svg
+                >
+                <p>{t("No changes to commit")}</p>
+                <span
+                    >{t(
+                        "Changes will appear here as you edit your notes."
+                    )}</span
+                >
+            </div>
+        {/if}
         {#if status && status.conflicted.length > 0}
             <div
                 class="conflicts tree-item nav-folder"
@@ -635,95 +673,102 @@
 
         {#if status && stagedHierarchy && changeHierarchy}
             <div class="tree-item nav-folder mod-root">
-                <div
-                    class="staged tree-item nav-folder"
-                    class:is-collapsed={!stagedOpen}
-                >
+                {#if status.staged.length > 0}
                     <div
-                        class="tree-item-self is-clickable nav-folder-title"
-                        onclick={() => (stagedOpen = !stagedOpen)}
+                        class="staged tree-item nav-folder"
+                        class:is-collapsed={!stagedOpen}
                     >
                         <div
-                            class="tree-item-icon nav-folder-collapse-indicator collapse-icon"
-                            class:is-collapsed={!stagedOpen}
+                            class="tree-item-self is-clickable nav-folder-title"
+                            onclick={() => (stagedOpen = !stagedOpen)}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="svg-icon right-triangle"
-                                ><path d="M3 8L12 17L21 8" /></svg
+                            <div
+                                class="tree-item-icon nav-folder-collapse-indicator collapse-icon"
+                                class:is-collapsed={!stagedOpen}
                             >
-                        </div>
-                        <div class="tree-item-inner nav-folder-title-content">
-                            {t("Staged Changes")}
-                        </div>
-
-                        <div class="git-tools">
-                            <div class="buttons">
-                                <div
-                                    data-icon="minus"
-                                    aria-label={t("Unstage")}
-                                    bind:this={buttons[8]}
-                                    onclick={unstageAll}
-                                    class="clickable-icon"
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="svg-icon right-triangle"
+                                    ><path d="M3 8L12 17L21 8" /></svg
                                 >
-                                    <svg
-                                        width="18"
-                                        height="18"
-                                        viewBox="0 0 18 18"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="svg-icon lucide-minus"
-                                        ><line
-                                            x1="4"
-                                            y1="9"
-                                            x2="14"
-                                            y2="9"
-                                        /></svg
+                            </div>
+                            <div
+                                class="tree-item-inner nav-folder-title-content"
+                            >
+                                {t("Staged Changes")}
+                            </div>
+
+                            <div class="git-tools">
+                                <div class="buttons">
+                                    <div
+                                        data-icon="minus"
+                                        id="unstage-all"
+                                        aria-label={t("Unstage all")}
+                                        bind:this={buttons[8]}
+                                        onclick={unstageAll}
+                                        class="clickable-icon"
                                     >
+                                        <svg
+                                            width="18"
+                                            height="18"
+                                            viewBox="0 0 18 18"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            class="svg-icon lucide-minus"
+                                            ><line
+                                                x1="4"
+                                                y1="9"
+                                                x2="14"
+                                                y2="9"
+                                            /></svg
+                                        >
+                                    </div>
+                                </div>
+                                <div class="files-count">
+                                    {status.staged.length}
                                 </div>
                             </div>
-                            <div class="files-count">
-                                {status.staged.length}
-                            </div>
                         </div>
-                    </div>
-                    {#if stagedOpen}
-                        <div
-                            class="tree-item-children nav-folder-children"
-                            transition:slide|local={{ duration: 150 }}
-                        >
-                            {#if showTree}
-                                <TreeComponent
-                                    hierarchy={stagedHierarchy}
-                                    {plugin}
-                                    {view}
-                                    fileType={FileType.staged}
-                                    topLevel={true}
-                                    bind:closed={stagedClosed}
-                                />
-                            {:else}
-                                {#each arrayProxyWithNewLength(status.staged, 500) as stagedFile}
-                                    <StagedFileComponent
-                                        change={stagedFile}
+                        {#if stagedOpen}
+                            <div
+                                class="tree-item-children nav-folder-children"
+                                transition:slide|local={{ duration: 150 }}
+                            >
+                                {#if showTree}
+                                    <TreeComponent
+                                        hierarchy={stagedHierarchy}
+                                        {plugin}
                                         {view}
+                                        fileType={FileType.staged}
+                                        topLevel={true}
+                                        bind:closed={stagedClosed}
                                     />
-                                {/each}
-                                <TooManyFilesComponent files={status.staged} />
-                            {/if}
-                        </div>
-                    {/if}
-                </div>
+                                {:else}
+                                    {#each arrayProxyWithNewLength(status.staged, 500) as stagedFile}
+                                        <StagedFileComponent
+                                            change={stagedFile}
+                                            {view}
+                                        />
+                                    {/each}
+                                    <TooManyFilesComponent
+                                        files={status.staged}
+                                    />
+                                {/if}
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
                 {#if status.stagedOutsideVault > 0}
                     <div class="staged tree-item nav-folder">
                         <div class="tree-item-self nav-folder-title">
@@ -756,120 +801,127 @@
                         </div>
                     </div>
                 {/if}
-                <div
-                    class="changes tree-item nav-folder"
-                    class:is-collapsed={!changesOpen}
-                >
+                {#if status.changed.length > 0}
                     <div
-                        onclick={() => (changesOpen = !changesOpen)}
-                        class="tree-item-self is-clickable nav-folder-title"
+                        class="changes tree-item nav-folder"
+                        class:is-collapsed={!changesOpen}
                     >
                         <div
-                            class="tree-item-icon nav-folder-collapse-indicator collapse-icon"
-                            class:is-collapsed={!changesOpen}
+                            onclick={() => (changesOpen = !changesOpen)}
+                            class="tree-item-self is-clickable nav-folder-title"
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="svg-icon right-triangle"
-                                ><path d="M3 8L12 17L21 8" /></svg
+                            <div
+                                class="tree-item-icon nav-folder-collapse-indicator collapse-icon"
+                                class:is-collapsed={!changesOpen}
                             >
-                        </div>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="svg-icon right-triangle"
+                                    ><path d="M3 8L12 17L21 8" /></svg
+                                >
+                            </div>
 
-                        <div class="tree-item-inner nav-folder-title-content">
-                            {t("Changes")}
-                        </div>
-                        <div class="git-tools">
-                            <div class="buttons">
-                                <div
-                                    data-icon="undo"
-                                    aria-label={t("Discard")}
-                                    onclick={discard}
-                                    class="clickable-icon"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="svg-icon lucide-undo"
-                                        ><path d="M3 7v6h6" /><path
-                                            d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"
-                                        /></svg
+                            <div
+                                class="tree-item-inner nav-folder-title-content"
+                            >
+                                {t("Changes")}
+                            </div>
+                            <div class="git-tools">
+                                <div class="buttons">
+                                    <div
+                                        data-icon="undo"
+                                        aria-label={t("Discard")}
+                                        onclick={discard}
+                                        class="clickable-icon"
                                     >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="24"
+                                            height="24"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            class="svg-icon lucide-undo"
+                                            ><path d="M3 7v6h6" /><path
+                                                d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"
+                                            /></svg
+                                        >
+                                    </div>
+                                    <div
+                                        data-icon="plus"
+                                        id="stage-all"
+                                        aria-label={t("Stage all")}
+                                        bind:this={buttons[9]}
+                                        onclick={stageAll}
+                                        class="clickable-icon"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="24"
+                                            height="24"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            class="svg-icon lucide-plus"
+                                            ><line
+                                                x1="12"
+                                                y1="5"
+                                                x2="12"
+                                                y2="19"
+                                            /><line
+                                                x1="5"
+                                                y1="12"
+                                                x2="19"
+                                                y2="12"
+                                            /></svg
+                                        >
+                                    </div>
                                 </div>
-                                <div
-                                    data-icon="plus"
-                                    aria-label={t("Stage")}
-                                    bind:this={buttons[9]}
-                                    onclick={stageAll}
-                                    class="clickable-icon"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        class="svg-icon lucide-plus"
-                                        ><line
-                                            x1="12"
-                                            y1="5"
-                                            x2="12"
-                                            y2="19"
-                                        /><line
-                                            x1="5"
-                                            y1="12"
-                                            x2="19"
-                                            y2="12"
-                                        /></svg
-                                    >
+                                <div class="files-count">
+                                    {status.changed.length}
                                 </div>
                             </div>
-                            <div class="files-count">
-                                {status.changed.length}
-                            </div>
                         </div>
+                        {#if changesOpen}
+                            <div
+                                class="tree-item-children nav-folder-children"
+                                transition:slide|local={{ duration: 150 }}
+                            >
+                                {#if showTree}
+                                    <TreeComponent
+                                        hierarchy={changeHierarchy}
+                                        {plugin}
+                                        {view}
+                                        fileType={FileType.changed}
+                                        topLevel={true}
+                                        bind:closed={unstagedClosed}
+                                    />
+                                {:else}
+                                    {#each arrayProxyWithNewLength(status.changed, 500) as change}
+                                        <FileComponent {change} {view} />
+                                    {/each}
+                                    <TooManyFilesComponent
+                                        files={status.changed}
+                                    />
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
-                    {#if changesOpen}
-                        <div
-                            class="tree-item-children nav-folder-children"
-                            transition:slide|local={{ duration: 150 }}
-                        >
-                            {#if showTree}
-                                <TreeComponent
-                                    hierarchy={changeHierarchy}
-                                    {plugin}
-                                    {view}
-                                    fileType={FileType.changed}
-                                    topLevel={true}
-                                    bind:closed={unstagedClosed}
-                                />
-                            {:else}
-                                {#each arrayProxyWithNewLength(status.changed, 500) as change}
-                                    <FileComponent {change} {view} />
-                                {/each}
-                                <TooManyFilesComponent files={status.changed} />
-                            {/if}
-                        </div>
-                    {/if}
-                </div>
+                {/if}
                 {#if lastPulledFiles.length > 0 && lastPulledFilesHierarchy}
                     <div
                         class="pulled nav-folder"
@@ -940,80 +992,6 @@
 </main>
 
 <style lang="scss">
-    .repository-missing {
-        > .nav-header,
-        > .git-commit-msg,
-        > .nav-files-container {
-            display: none;
-        }
-    }
-
-    .repository-notice {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: var(--size-4-3);
-        padding: var(--size-4-6);
-        text-align: center;
-
-        p {
-            margin: 0;
-            color: var(--text-muted);
-        }
-    }
-
-    .repository-actions {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: var(--size-4-2);
-    }
-
-    .commit-action-group {
-        display: inline-flex;
-        flex: 0 0 auto;
-        gap: 0;
-        overflow: hidden;
-        border: 1px solid var(--background-modifier-border);
-        border-radius: var(--radius-s);
-
-        .nav-action-button {
-            margin: 0;
-            border-radius: 0;
-        }
-
-        .nav-action-button + .nav-action-button {
-            border-left: 1px solid var(--background-modifier-border);
-        }
-
-        #commit-menu {
-            width: var(--size-4-5);
-            padding-right: 0;
-            padding-left: 0;
-        }
-    }
-
-    .merge-status {
-        color: var(--text-warning);
-    }
-
-    .commit-msg-input {
-        width: 100%;
-        overflow: hidden;
-        resize: none;
-        padding: 7px 5px;
-        background-color: var(--background-modifier-form-field);
-    }
-
-    .git-commit-msg {
-        position: relative;
-        padding: 0;
-        width: calc(100% - var(--size-4-8));
-        margin: 4px auto;
-    }
-
     .conflicts {
         --nav-indentation-guide-color: var(--text-warning);
         --collapse-icon-color: var(--text-warning);
@@ -1023,18 +1001,9 @@
             color: var(--text-warning);
         }
 
-        .nav-folder-collapse-indicator {
-            color: var(--text-warning);
-
-            svg {
-                color: var(--text-warning);
-            }
-        }
-
-        :global(.topLevel .nav-folder-collapse-indicator) {
-            color: var(--text-warning);
-        }
-
+        .nav-folder-collapse-indicator,
+        .nav-folder-collapse-indicator svg,
+        :global(.topLevel .nav-folder-collapse-indicator),
         :global(.topLevel .nav-folder-collapse-indicator svg) {
             color: var(--text-warning);
         }
@@ -1042,53 +1011,5 @@
         .tree-item-children {
             border-inline-start-color: var(--text-warning);
         }
-    }
-    main {
-        .git-tools {
-            .files-count {
-                padding-left: var(--size-2-1);
-                width: 11px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-        }
-    }
-
-    .nav-folder-title {
-        align-items: center;
-    }
-
-    .git-commit-msg-clear-button {
-        position: absolute;
-        background: transparent;
-        border-radius: 50%;
-        color: var(--search-clear-button-color);
-        cursor: var(--cursor);
-        top: -4px;
-        right: 2px;
-        bottom: 0px;
-        line-height: 0;
-        height: var(--input-height);
-        width: 28px;
-        margin: auto;
-        padding: 0 0;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        transition: color 0.15s ease-in-out;
-    }
-
-    .git-commit-msg-clear-button:after {
-        content: "";
-        height: var(--search-clear-button-size);
-        width: var(--search-clear-button-size);
-        display: block;
-        background-color: currentColor;
-        mask-image: url("data:image/svg+xml,<svg viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M6 12C9.31371 12 12 9.31371 12 6C12 2.68629 9.31371 0 6 0C2.68629 0 0 2.68629 0 6C0 9.31371 2.68629 12 6 12ZM3.8705 3.09766L6.00003 5.22718L8.12955 3.09766L8.9024 3.8705L6.77287 6.00003L8.9024 8.12955L8.12955 8.9024L6.00003 6.77287L3.8705 8.9024L3.09766 8.12955L5.22718 6.00003L3.09766 3.8705L3.8705 3.09766Z' fill='currentColor'/></svg>");
-        mask-repeat: no-repeat;
-        -webkit-mask-image: url("data:image/svg+xml,<svg viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M6 12C9.31371 12 12 9.31371 12 6C12 2.68629 9.31371 0 6 0C2.68629 0 0 2.68629 0 6C0 9.31371 2.68629 12 6 12ZM3.8705 3.09766L6.00003 5.22718L8.12955 3.09766L8.9024 3.8705L6.77287 6.00003L8.9024 8.12955L8.12955 8.9024L6.00003 6.77287L3.8705 8.9024L3.09766 8.12955L5.22718 6.00003L3.09766 3.8705L3.8705 3.09766Z' fill='currentColor'/></svg>");
-        -webkit-mask-repeat: no-repeat;
     }
 </style>

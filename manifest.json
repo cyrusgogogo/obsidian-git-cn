@@ -2,9 +2,9 @@
     "author": "xr",
     "authorUrl": "https://github.com/cyrusgogogo/obsidian-git-cn",
     "id": "obsidian-git-cn",
-    "name": "Obsidian Git（中文版）",
+    "name": "Gitcn",
     "description": "面向中文用户的 Obsidian Git 插件：自动提交、拉取、推送与合并，界面完整中文化。",
     "isDesktopOnly": true,
     "minAppVersion": "1.13.1",
-    "version": "1.1.0"
+    "version": "1.1.1"
 }

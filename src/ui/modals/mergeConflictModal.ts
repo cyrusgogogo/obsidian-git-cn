@@ -22,7 +22,7 @@ export class MergeConflictModal extends Modal {
                       "Rebase is in progress. Do not use ordinary commit commands. Resolve and stage conflicts, then run native Git `git rebase --continue`, or use `git rebase --abort` to abort."
                   )
                 : t(
-                      "Git is combining the version in your vault with changes from another version. The merge must be committed before Obsidian Git can push or resume automatic commits."
+                      "Git is combining the version in your vault with changes from another version. The merge must be committed before Gitcn can push or resume automatic commits."
                   ),
         });
 
