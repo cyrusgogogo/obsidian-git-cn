@@ -1,5 +1,6 @@
+import { moment } from "src/moment";
 import { hostname as osHostname } from "os";
-import { type App, moment, Platform } from "obsidian";
+import { type App, Platform } from "obsidian";
 import type ObsidianGit from "../main";
 import { t } from "../i18n";
 import { GitOperation } from "../types";

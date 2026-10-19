@@ -1,4 +1,5 @@
-import { setIcon, moment } from "obsidian";
+import { moment } from "src/moment";
+import { setIcon } from "obsidian";
 import { t } from "./i18n";
 import type ObsidianGit from "./main";
 import { formatRemoteStatus } from "./remoteState";

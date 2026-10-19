@@ -1,3 +1,4 @@
+import { moment } from "src/moment";
 import type {
     App,
     RGB,
@@ -5,7 +6,6 @@ import type {
     SettingDefinitionItem,
 } from "obsidian";
 import {
-    moment,
     Notice,
     Platform,
     PluginSettingTab,

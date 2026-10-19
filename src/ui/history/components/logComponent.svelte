@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { moment } from "obsidian";
+    import { moment } from "src/moment";
     import type ObsidianGit from "src/main";
     import type { LogEntry } from "src/types";
     import { getTooltipSide } from "src/utils";

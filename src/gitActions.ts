@@ -1,5 +1,6 @@
+import { moment } from "src/moment";
 import { Errors } from "isomorphic-git";
-import { normalizePath, Notice, Platform, TFile, moment } from "obsidian";
+import { normalizePath, Notice, Platform, TFile } from "obsidian";
 import * as fsPromises from "fs/promises";
 import * as path from "path";
 import { CustomMessageModal } from "src/ui/modals/customMessageModal";

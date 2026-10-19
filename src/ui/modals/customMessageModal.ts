@@ -1,4 +1,5 @@
-import { moment, SuggestModal } from "obsidian";
+import { moment } from "src/moment";
+import { SuggestModal } from "obsidian";
 import { t } from "src/i18n";
 import type ObsidianGit from "src/main";
 

@@ -81,7 +81,8 @@
             !status ||
             repositoryMissing ||
             hasConflicts ||
-            mergeInProgress
+            mergeInProgress ||
+            rebaseInProgress
     );
     let commitActionDescription = $derived(getCommitActionDescription(false));
     let commitAndSyncActionDescription = $derived(
@@ -593,7 +594,7 @@
                 >
             </div>
         </div>
-        {#if mergeInProgress}
+        {#if mergeInProgress || rebaseInProgress}
             <button
                 type="button"
                 id="merge-status"
@@ -606,7 +607,10 @@
                     data-icon="git-merge"
                     bind:this={buttons[11]}
                     aria-hidden="true"
-                ></span><span>{t("Merge in progress - select for help")}</span
+                ></span><span
+                    >{rebaseInProgress
+                        ? t("Rebase in progress")
+                        : t("Merge in progress - select for help")}</span
                 ></button
             >
         {/if}
