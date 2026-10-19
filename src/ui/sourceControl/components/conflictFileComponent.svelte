@@ -2,8 +2,9 @@
     import { setIcon, TFile } from "obsidian";
     import { t } from "src/i18n";
     import type { GitManager } from "src/gitManager/gitManager";
-    import { getDisplayPath, getNewLeaf, getTooltipSide } from "src/utils";
+    import { getNewLeaf, getTooltipSide } from "src/utils";
     import type GitView from "../sourceControl";
+    import FileLabel from "./fileLabel.svelte";
 
     interface Props {
         path: string;
@@ -57,9 +58,7 @@
         data-tooltip-position={side}
         aria-label={vaultPath}
     >
-        <div class="tree-item-inner nav-file-title-content">
-            {getDisplayPath(vaultPath)}
-        </div>
+        <FileLabel path={vaultPath} />
         <div class="git-tools">
             <div class="buttons">
                 <div

@@ -31,6 +31,7 @@ import { parseLocale, setLocale, t } from "src/i18n";
 import type ObsidianGit from "src/main";
 import type { ObsidianGitSettings } from "src/types";
 import { convertToRgb, rgbToString } from "src/utils";
+import { layoutSyncPage } from "./syncLayout";
 
 const FORMAT_STRING_REFERENCE_URL =
     "https://momentjs.com/docs/#/parsing/string-format/";
@@ -188,7 +189,8 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
             storedKey === "differentIntervalCommitAndPush" ||
             storedKey === "autoSaveInterval" ||
             storedKey === "disablePush" ||
-            storedKey === "pullBeforePush"
+            storedKey === "pullBeforePush" ||
+            storedKey === "syncMethod"
         ) {
             this.update();
         }
@@ -206,12 +208,113 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
         // 其余控件的可见性和禁用条件由 Obsidian 在写入后刷新。
     }
 
+    private repositorySummary(): SettingDefinition {
+        return {
+            name: t("Repository summary"),
+            desc: t(
+                this.plugin.gitReady
+                    ? "Git is ready"
+                    : "Git is not ready. When all settings are correct you can configure commit-sync, etc."
+            ),
+            render: (setting) => {
+                setting.setClass("git-settings-repository-summary");
+                setting.setName(this.app.vault.getName());
+                if (!this.plugin.gitReady) return;
+                const manager = this.plugin.gitManager;
+                let active = true;
+                void Promise.all([manager.branchInfo(), manager.getRemotes()])
+                    .then(([branch, remotes]) => {
+                        // 切换仓库期间的旧请求不得写入新摘要，也不读取私有 URL。
+                        if (
+                            !active ||
+                            manager !== this.plugin.gitManager ||
+                            !this.plugin.gitReady
+                        )
+                            return;
+                        setting.setDesc(
+                            t("Branch: {branch} · Remotes: {remotes}", {
+                                branch:
+                                    branch.current ?? t("No current branch"),
+                                remotes:
+                                    remotes.join(", ") ||
+                                    t("No remote configured"),
+                            })
+                        );
+                    })
+                    .catch(() => {
+                        if (active && manager === this.plugin.gitManager)
+                            setting.setDesc(
+                                t("Repository summary unavailable")
+                            );
+                    });
+                return () => {
+                    active = false;
+                };
+            },
+        };
+    }
+
+    private manualSync(): SettingDefinition {
+        return {
+            name: t("Manual sync"),
+            desc: t(
+                "Manual sync is always available from commands. It follows the pull and push preferences; it has no separate enable switch."
+            ),
+            render: (setting) => {
+                let pending = false;
+                setting.addButton((button) =>
+                    button
+                        .setButtonText(t("Commit-and-sync"))
+                        .setCta()
+                        .onClick(() => {
+                            if (pending || !this.plugin.gitReady) return;
+                            pending = true;
+                            button.setDisabled(true);
+                            this.plugin.promiseQueue.addTask(
+                                () =>
+                                    this.plugin.gitActions
+                                        .commitAndSync({
+                                            fromAutoBackup: false,
+                                        })
+                                        .catch((error: unknown) =>
+                                            this.plugin.displayError(error)
+                                        ),
+                                () => {
+                                    pending = false;
+                                    button.setDisabled(!this.plugin.gitReady);
+                                }
+                            );
+                        })
+                );
+            },
+        };
+    }
+
+    private syncSafety(): SettingDefinition {
+        const mobile = this.plugin.gitManager instanceof IsomorphicGit;
+        return {
+            name: t("Local change protection"),
+            desc: t(
+                mobile
+                    ? "Mobile Git uses merge. Desktop rebase and reset preferences do not apply."
+                    : this.settings.syncMethod === "reset"
+                      ? "Reset backs up local history and uses --keep. It refuses to overwrite local changes; it does not silently discard the working tree."
+                      : this.settings.syncMethod === "rebase"
+                        ? "Rebase protects local changes first. Resolve rebase conflicts with native Git, or abort the rebase before resuming sync."
+                        : "Merge preserves both histories. Local changes are protected before pulling; conflicts pause automatic routines. Stash is protection, not a pull strategy."
+            ),
+            render: (setting) => {
+                setting.setClass("git-settings-safety-note");
+            },
+        };
+    }
+
     getSettingDefinitions(): SettingDefinitionItem[] {
         const ready = () => this.plugin.gitReady;
         const desktop = () => this.plugin.gitManager instanceof SimpleGit;
         const mobile = () => this.plugin.gitManager instanceof IsomorphicGit;
         const kind = t(this.commitOrSync);
-        return [
+        const definitions: SettingDefinitionItem[] = [
             this.dropdown(
                 "Language",
                 "language",
@@ -288,22 +391,10 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
                             if (ready()) {
                                 void this.plugin.gitManager
                                     .getRemotes()
-                                    .then(async (remotes) => {
+                                    .then((remotes) => {
                                         if (!remotes.length) return;
-                                        const urls = await Promise.all(
-                                            remotes.map((name) =>
-                                                this.plugin.gitManager.getRemoteUrl(
-                                                    name
-                                                )
-                                            )
-                                        );
                                         setting.descEl.setText(
-                                            remotes
-                                                .map(
-                                                    (name, index) =>
-                                                        `${name}: ${urls[index] ?? ""}`
-                                                )
-                                                .join("\n")
+                                            remotes.join("\n")
                                         );
                                     })
                                     .catch(() => undefined);
@@ -1153,6 +1244,12 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
                 ],
             },
         ];
+        return layoutSyncPage(
+            definitions,
+            this.repositorySummary(),
+            this.manualSync(),
+            this.syncSafety()
+        );
     }
 
     public configureLineAuthorShowStatus(show: boolean) {

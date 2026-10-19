@@ -5,6 +5,7 @@ export default class AutomaticsManager {
     private timeoutIDCommitAndSync?: number;
     private timeoutIDPush?: number;
     private timeoutIDPull?: number;
+    private generations = { commit: 0, push: 0, pull: 0 };
 
     constructor(private readonly plugin: ObsidianGit) {}
 
@@ -29,10 +30,13 @@ export default class AutomaticsManager {
     }
 
     async init() {
+        const pushGeneration = this.generations.push;
+        const pullGeneration = this.generations.pull;
         await this.setUpAutoCommitAndSync();
         const lastAutos = this.loadLastAuto();
 
         if (
+            pushGeneration === this.generations.push &&
             this.plugin.settings.differentIntervalCommitAndPush &&
             this.plugin.settings.autoPushInterval > 0
         ) {
@@ -42,7 +46,10 @@ export default class AutomaticsManager {
             );
             this.startAutoPush(diff);
         }
-        if (this.plugin.settings.autoPullInterval > 0) {
+        if (
+            pullGeneration === this.generations.pull &&
+            this.plugin.settings.autoPullInterval > 0
+        ) {
             const diff = this.diff(
                 this.plugin.settings.autoPullInterval,
                 lastAutos.pull
@@ -64,14 +71,7 @@ export default class AutomaticsManager {
      * Should only be used when settings are changed.
      */
     reload(...type: ("commit" | "push" | "pull")[]) {
-        if (
-            this.plugin.localStorage.getPausedAutomatics() ||
-            this.plugin.localStorage.getConflict()
-        ) {
-            return;
-        }
-
-        if (type.contains("commit")) {
+        if (type.includes("commit")) {
             this.clearAutoCommitAndSync();
             if (this.plugin.settings.autoSaveInterval > 0) {
                 this.startAutoCommitAndSync(
@@ -79,7 +79,7 @@ export default class AutomaticsManager {
                 );
             }
         }
-        if (type.contains("push")) {
+        if (type.includes("push")) {
             this.clearAutoPush();
             if (
                 this.plugin.settings.differentIntervalCommitAndPush &&
@@ -88,7 +88,7 @@ export default class AutomaticsManager {
                 this.startAutoPush(this.plugin.settings.autoPushInterval);
             }
         }
-        if (type.contains("pull")) {
+        if (type.includes("pull")) {
             this.clearAutoPull();
             if (this.plugin.settings.autoPullInterval > 0) {
                 this.startAutoPull(this.plugin.settings.autoPullInterval);
@@ -105,8 +105,14 @@ export default class AutomaticsManager {
     private async setUpAutoCommitAndSync() {
         if (this.plugin.settings.setLastSaveToLastCommit) {
             this.clearAutoCommitAndSync();
+        }
+        const generation = this.generations.commit;
+        if (this.plugin.settings.setLastSaveToLastCommit) {
             const lastCommitDate =
                 await this.plugin.gitManager.getLastCommitTime();
+            if (!this.canRunAutomatic("commit", generation)) {
+                return;
+            }
             if (lastCommitDate) {
                 this.saveLastAuto(lastCommitDate, "backup");
             }
@@ -133,13 +139,36 @@ export default class AutomaticsManager {
         );
     }
 
+    private canRunAutomatic(
+        type: "commit" | "push" | "pull",
+        generation = this.generations[type]
+    ): boolean {
+        if (
+            generation !== this.generations[type] ||
+            this.isAutomaticsDisabled
+        ) {
+            return false;
+        }
+        if (type === "commit") {
+            return this.plugin.settings.autoSaveInterval > 0;
+        }
+        if (type === "push") {
+            return (
+                this.plugin.settings.differentIntervalCommitAndPush &&
+                this.plugin.settings.autoPushInterval > 0
+            );
+        }
+        return this.plugin.settings.autoPullInterval > 0;
+    }
+
     private startAutoCommitAndSync(minutes?: number) {
-        if (this.isAutomaticsDisabled) {
+        if (!this.canRunAutomatic("commit")) {
             return;
         }
+        const generation = this.generations.commit;
         if (this.plugin.settings.autoBackupAfterFileChange) {
             if (minutes === 0) {
-                this.doAutoCommitAndSync();
+                this.doAutoCommitAndSync(generation);
             } else {
                 // Reuse the existing debouncer. Vault events during the run
                 // that just finished have already re-armed it; replacing it
@@ -147,7 +176,7 @@ export default class AutomaticsManager {
                 // old one firing on its own schedule while the user keeps
                 // editing.
                 this.plugin.autoCommitDebouncer ??= debounce(
-                    () => this.doAutoCommitAndSync(),
+                    () => this.doAutoCommitAndSync(generation),
                     this.plugin.settings.autoSaveInterval * 60000,
                     true
                 );
@@ -158,21 +187,30 @@ export default class AutomaticsManager {
             // max timeout in js
             if (time > 2147483647) time = 2147483647;
             this.timeoutIDCommitAndSync = window.setTimeout(
-                () => this.doAutoCommitAndSync(),
+                () => this.doAutoCommitAndSync(generation),
                 time
             );
         }
     }
 
     // This is used for both auto commit-and-sync and commit only
-    private doAutoCommitAndSync(): void {
+    private doAutoCommitAndSync(generation: number): void {
+        if (!this.canRunAutomatic("commit", generation)) {
+            return;
+        }
         this.plugin.promiseQueue.addTask(
             async () => {
+                if (!this.canRunAutomatic("commit", generation)) {
+                    return false;
+                }
                 // Re-check if the auto commit should run now or be postponed,
                 // because the last commit time has changed
                 if (this.plugin.settings.setLastSaveToLastCommit) {
                     const lastCommitDate =
                         await this.plugin.gitManager.getLastCommitTime();
+                    if (!this.canRunAutomatic("commit", generation)) {
+                        return false;
+                    }
                     if (lastCommitDate) {
                         this.saveLastAuto(lastCommitDate, "backup");
                         const diff = this.diff(
@@ -205,7 +243,10 @@ export default class AutomaticsManager {
             },
             (schedule) => {
                 // Don't schedule if the next iteration is already scheduled
-                if (schedule !== false) {
+                if (
+                    schedule !== false &&
+                    this.canRunAutomatic("commit", generation)
+                ) {
                     this.saveLastAuto(new Date(), "backup");
                     this.startAutoCommitAndSync();
                 }
@@ -214,20 +255,34 @@ export default class AutomaticsManager {
     }
 
     private startAutoPull(minutes?: number) {
-        if (this.isAutomaticsDisabled) {
+        if (!this.canRunAutomatic("pull")) {
             return;
         }
+        const generation = this.generations.pull;
         let time = (minutes ?? this.plugin.settings.autoPullInterval) * 60000;
         // max timeout in js
         if (time > 2147483647) time = 2147483647;
 
-        this.timeoutIDPull = window.setTimeout(() => this.doAutoPull(), time);
+        this.timeoutIDPull = window.setTimeout(
+            () => this.doAutoPull(generation),
+            time
+        );
     }
 
-    private doAutoPull(): void {
+    private doAutoPull(generation: number): void {
+        if (!this.canRunAutomatic("pull", generation)) {
+            return;
+        }
         this.plugin.promiseQueue.addTask(
-            () => this.plugin.gitActions.pullChangesFromRemote(),
+            async () => {
+                if (this.canRunAutomatic("pull", generation)) {
+                    await this.plugin.gitActions.pullChangesFromRemote();
+                }
+            },
             () => {
+                if (!this.canRunAutomatic("pull", generation)) {
+                    return;
+                }
                 this.saveLastAuto(new Date(), "pull");
                 this.startAutoPull();
             }
@@ -235,20 +290,34 @@ export default class AutomaticsManager {
     }
 
     private startAutoPush(minutes?: number) {
-        if (this.isAutomaticsDisabled) {
+        if (!this.canRunAutomatic("push")) {
             return;
         }
+        const generation = this.generations.push;
         let time = (minutes ?? this.plugin.settings.autoPushInterval) * 60000;
         // max timeout in js
         if (time > 2147483647) time = 2147483647;
 
-        this.timeoutIDPush = window.setTimeout(() => this.doAutoPush(), time);
+        this.timeoutIDPush = window.setTimeout(
+            () => this.doAutoPush(generation),
+            time
+        );
     }
 
-    private doAutoPush(): void {
+    private doAutoPush(generation: number): void {
+        if (!this.canRunAutomatic("push", generation)) {
+            return;
+        }
         this.plugin.promiseQueue.addTask(
-            () => this.plugin.gitActions.push(),
+            async () => {
+                if (this.canRunAutomatic("push", generation)) {
+                    await this.plugin.gitActions.push();
+                }
+            },
             () => {
+                if (!this.canRunAutomatic("push", generation)) {
+                    return;
+                }
                 this.saveLastAuto(new Date(), "push");
                 this.startAutoPush();
             }
@@ -256,6 +325,8 @@ export default class AutomaticsManager {
     }
 
     private clearAutoCommitAndSync(): boolean {
+        // 即使没有待触发定时器，也要使队列中和执行中的旧回调失效。
+        this.generations.commit++;
         let wasActive = false;
         if (this.timeoutIDCommitAndSync) {
             window.clearTimeout(this.timeoutIDCommitAndSync);
@@ -271,6 +342,7 @@ export default class AutomaticsManager {
     }
 
     private clearAutoPull(): boolean {
+        this.generations.pull++;
         if (this.timeoutIDPull) {
             window.clearTimeout(this.timeoutIDPull);
             this.timeoutIDPull = undefined;
@@ -280,6 +352,7 @@ export default class AutomaticsManager {
     }
 
     private clearAutoPush(): boolean {
+        this.generations.push++;
         if (this.timeoutIDPush) {
             window.clearTimeout(this.timeoutIDPush);
             this.timeoutIDPush = undefined;

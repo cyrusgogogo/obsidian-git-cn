@@ -20,6 +20,8 @@
     import type GitView from "./sourceControl";
     import TooManyFilesComponent from "./components/tooManyFilesComponent.svelte";
     import { onMount } from "svelte";
+    import { getCommitAvailability } from "./commitAvailability";
+    import { createCommitSubmission } from "./commitSubmission";
 
     interface Props {
         plugin: ObsidianGit;
@@ -28,12 +30,15 @@
 
     let { plugin, view }: Props = $props();
     let loading: boolean = $state(false);
+    let pending = $state(false);
     let repositoryMissing = $state(false);
     let setupInProgress = $state(false);
     let mergeInProgress = $state(false);
+    let rebaseInProgress = $state(false);
     let status: Status | undefined = $state();
     let lastPulledFiles: FileStatusResult[] = $state([]);
-    let commitMessage = $derived(plugin.settings.commitMessage);
+    let commitMessage = $state("");
+    let messageRevision = $state(0);
     let buttons: (HTMLElement | null)[] = $state([]);
     let changeHierarchy: StatusRootTreeItem | undefined = $state();
     let stagedHierarchy: StatusRootTreeItem | undefined = $state();
@@ -71,7 +76,13 @@
     let hasChanges = $derived(stagedCount + changedCount > 0);
     let commitDisabled = $derived(!canCommit("smart"));
     let commitAndSyncDisabled = $derived(!canCommitAndSync("all"));
-
+    let syncBlocked = $derived(
+        pending ||
+            !status ||
+            repositoryMissing ||
+            hasConflicts ||
+            mergeInProgress
+    );
     let commitActionDescription = $derived(getCommitActionDescription(false));
     let commitAndSyncActionDescription = $derived(
         getCommitActionDescription(true)
@@ -79,6 +90,7 @@
 
     let showTree = $derived(plugin.settings.treeStructure);
     onMount(() => {
+        commitMessage = plugin.settings.commitMessage;
         repositoryMissing = plugin.repositoryMissing;
         view.registerEvent(
             view.app.workspace.on(
@@ -130,6 +142,12 @@
     });
 
     function getCommitActionDescription(sync: boolean): string {
+        if (rebaseInProgress) {
+            return t(
+                "Rebase is in progress. Do not use ordinary commit commands. Resolve and stage conflicts, then run native Git `git rebase --continue`, or use `git rebase --abort` to abort."
+            );
+        }
+        if (!status || repositoryMissing) return t("Git is not ready");
         if (hasConflicts) {
             return t("Resolve conflicts before committing");
         }
@@ -156,67 +174,67 @@
     }
 
     function canCommit(mode: CommitMode): boolean {
-        if (hasConflicts) return false;
-        if (mode === "staged") return stagedCount > 0;
-        if (mode === "all") return hasChanges;
-        return (
-            mergeInProgress ||
-            stagedCount > 0 ||
-            (plugin.settings.autoStageOnEmptyIndex && changedCount > 0)
-        );
+        return commitAvailability()[mode];
     }
 
     function canCommitAndSync(mode: "staged" | "all"): boolean {
-        if (hasConflicts) return false;
-        return mode === "all" || stagedCount > 0;
+        const availability = commitAvailability();
+        return mode === "all" ? availability.syncAll : availability.syncStaged;
     }
+
+    function commitAvailability() {
+        return getCommitAvailability({
+            ready: !!status && plugin.gitReady && !repositoryMissing,
+            pending,
+            hasConflicts,
+            rebaseInProgress: rebaseInProgress || plugin.syncKind === "rebase",
+            mergeInProgress,
+            stagedCount,
+            changedCount,
+            autoStageOnEmptyIndex: plugin.settings.autoStageOnEmptyIndex,
+        });
+    }
+
+    const commitSubmission = createCommitSubmission({
+        get queue() {
+            return plugin.promiseQueue;
+        },
+        getDraft: () => ({ message: commitMessage, revision: messageRevision }),
+        setPending: (value) => (pending = value),
+        clearMessage: () => (commitMessage = ""),
+        refresh: triggerRefresh,
+        run: (snapshot) =>
+            snapshot.kind === "sync"
+                ? plugin.gitActions.commitAndSync({
+                      fromAutoBackup: false,
+                      commitMessage: snapshot.commitMessage,
+                      mode: snapshot.mode,
+                  })
+                : plugin.gitActions.commit({
+                      fromAuto: false,
+                      commitMessage: snapshot.commitMessage,
+                      mode: snapshot.mode,
+                      amend: snapshot.amend,
+                  }),
+    });
 
     function commit(mode: CommitMode = "smart") {
         if (!canCommit(mode)) return;
-        loading = true;
-        if (status) {
-            plugin.promiseQueue.addTask(() =>
-                plugin.gitActions
-                    .commit({ fromAuto: false, commitMessage, mode })
-                    .then(() => (commitMessage = plugin.settings.commitMessage))
-                    .finally(triggerRefresh)
-            );
-        }
+        commitSubmission.submit({ kind: "commit", mode });
     }
 
     function amendStaged() {
         if (!canCommit("staged")) return;
-        loading = true;
-        plugin.promiseQueue.addTask(() =>
-            plugin.gitActions
-                .commit({
-                    fromAuto: false,
-                    commitMessage,
-                    mode: "staged",
-                    amend: true,
-                })
-                .then(() => (commitMessage = plugin.settings.commitMessage))
-                .finally(triggerRefresh)
-        );
+        commitSubmission.submit({
+            kind: "commit",
+            mode: "staged",
+            amend: true,
+        });
     }
 
     function commitAndSync(mode: "staged" | "all" = "all") {
         if (!canCommitAndSync(mode)) return;
-        loading = true;
-        if (status) {
-            plugin.promiseQueue.addTask(() =>
-                plugin.gitActions
-                    .commitAndSync({
-                        fromAutoBackup: false,
-                        commitMessage,
-                        mode,
-                    })
-                    .then(() => {
-                        commitMessage = plugin.settings.commitMessage;
-                    })
-                    .finally(triggerRefresh)
-            );
-        }
+        commitSubmission.submit({ kind: "sync", mode });
     }
 
     function showCommitMenu(event: MouseEvent) {
@@ -248,7 +266,7 @@
             item
                 .setTitle(t("Commit staged and sync"))
                 .setIcon("arrow-up-circle")
-                .setDisabled(!canCommit("staged"))
+                .setDisabled(!canCommitAndSync("staged"))
                 .onClick(() => commitAndSync("staged"))
         );
         menu.showAtMouseEvent(event);
@@ -264,6 +282,7 @@
 
         status = plugin.cachedStatus;
         mergeInProgress = plugin.state.mergeInProgress;
+        rebaseInProgress = plugin.syncKind === "rebase";
         loading = false;
         if (
             plugin.lastPulledFiles &&
@@ -384,12 +403,14 @@
     }
 
     function push() {
+        if (syncBlocked || plugin.syncKind !== "none") return;
         loading = true;
         plugin.promiseQueue.addTask(() =>
             plugin.gitActions.push().finally(triggerRefresh)
         );
     }
     function pull() {
+        if (syncBlocked || plugin.syncKind !== "none") return;
         loading = true;
         plugin.promiseQueue.addTask(() =>
             plugin.gitActions.pullChangesFromRemote().finally(triggerRefresh)
@@ -443,6 +464,7 @@
                 class="clickable-icon gitcn-icon-button"
                 class:has-unpushed={unPushedCommits > 0}
                 aria-label={t("Push")}
+                disabled={syncBlocked}
                 onclick={push}
                 ><span
                     data-icon="upload"
@@ -455,6 +477,7 @@
                 id="pull"
                 class="clickable-icon gitcn-icon-button"
                 aria-label={t("Pull")}
+                disabled={syncBlocked}
                 onclick={pull}
                 ><span
                     data-icon="download"
@@ -504,12 +527,16 @@
                 spellcheck="true"
                 aria-label={t("Commit Message")}
                 placeholder={t("Commit Message")}
+                oninput={() => messageRevision++}
                 bind:value={commitMessage}></textarea>
             {#if commitMessage}
                 <button
                     type="button"
                     class="clickable-icon gitcn-icon-button gitcn-clear-message"
-                    onclick={() => (commitMessage = "")}
+                    onclick={() => {
+                        messageRevision++;
+                        commitMessage = "";
+                    }}
                     aria-label={t("Clear")}
                     ><svg
                         viewBox="0 0 24 24"
@@ -555,6 +582,7 @@
                     type="button"
                     id="commit-menu"
                     class="gitcn-menu-button"
+                    disabled={pending}
                     aria-label={t("More commit actions")}
                     onclick={showCommitMenu}
                     ><span
@@ -570,7 +598,9 @@
                 type="button"
                 id="merge-status"
                 class="gitcn-merge-status"
-                aria-label={t("Merge in progress - select for help")}
+                aria-label={rebaseInProgress
+                    ? t("Rebase in progress")
+                    : t("Merge in progress - select for help")}
                 onclick={() => plugin.openMergeConflictHelp()}
                 ><span
                     data-icon="git-merge"
@@ -583,7 +613,7 @@
     </div>
 
     <div class="nav-files-container" style="position: relative;">
-        {#if status && !hasChanges && !hasConflicts && !mergeInProgress && !loading}
+        {#if status && !hasChanges && !hasConflicts && !mergeInProgress && !rebaseInProgress && !loading && !pending}
             <div class="gitcn-empty-state" role="status">
                 <svg
                     viewBox="0 0 24 24"

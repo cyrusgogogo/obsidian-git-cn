@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Obsidian Git · 界面设计原型</title>
+  <style>
+    :root{color-scheme:dark;--canvas:#101113;--window:#1b1c20;--panel:#18191d;--surface:#222329;--hover:#292a32;--line:#303138;--text:#e8e7ed;--muted:#a1a0ae;--quiet:#747481;--accent:#beb0ee;--accent-ink:#211b35;--accent-soft:#302b40;--green:#9ac4ac;--green-soft:#24322b;--amber:#e8bc7d;--amber-soft:#392f23;--red:#e19f9f;--shadow:0 22px 75px #0005;--sans:"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;--mono:"SFMono-Regular","Cascadia Code",monospace}
+    [data-theme="light"]{color-scheme:light;--canvas:#eae9e6;--window:#faf9f6;--panel:#f0efec;--surface:#fffefa;--hover:#eae8e5;--line:#dedbd5;--text:#302e35;--muted:#75717c;--quiet:#96909c;--accent:#746194;--accent-ink:#fff;--accent-soft:#eee8f6;--green:#507a62;--green-soft:#e5eee7;--amber:#96652c;--amber-soft:#f6ebd9;--red:#b66464;--shadow:0 22px 75px #372a3914}
+    *{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--text);font:14px/1.6 var(--sans);transition:background .2s,color .2s}
+    button,input,textarea,select{font:inherit}button{cursor:pointer;color:inherit}button:disabled{cursor:not-allowed;opacity:.5}button,input,textarea,select{outline:none}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+    button{border:0;background:none}svg.icon{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:middle}
+    .sprite{position:absolute;width:0;height:0;overflow:hidden}.prototype{max-width:1440px;margin:auto;padding:28px 38px 24px}
+    .design-bar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:23px}.design-brand{display:flex;gap:13px;align-items:center}.mark{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);border-radius:11px;color:var(--accent)}.mark .icon{width:21px;height:21px}
+    .design-brand strong{display:block;font-size:13px;font-weight:600;letter-spacing:1.4px}.design-brand span{font-size:11px;color:var(--quiet);letter-spacing:1px}.design-controls{display:flex;gap:18px;align-items:center}
+    .segments{display:flex;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:9px}.segments button{padding:7px 18px;border-radius:6px;color:var(--muted);font-size:12px}.segments button.active{background:var(--hover);color:var(--text);box-shadow:0 1px 3px #0001}
+    .theme-button{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;padding:8px}.prototype-label{font:11px var(--mono);color:var(--quiet);border-left:1px solid var(--line);padding-left:18px}
+    .app{border:1px solid var(--line);background:var(--window);border-radius:13px;box-shadow:var(--shadow);overflow:hidden;min-height:690px}
+    .titlebar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid var(--line);background:var(--panel);font-size:11px;color:var(--quiet)}
+    .window-dots{display:flex;gap:7px;min-width:96px}.window-dots i{width:9px;height:9px;border-radius:50%;background:var(--quiet);opacity:.45}.window-title{display:flex;align-items:center;gap:9px}.window-title b{font-weight:400;color:var(--muted)}.title-end{min-width:96px;text-align:right}
+    .workspace{display:grid;grid-template-columns:48px 211px minmax(0,1fr);min-height:658px}
+    .ribbon{display:flex;flex-direction:column;align-items:center;gap:21px;padding:21px 0;background:var(--panel);border-right:1px solid var(--line);color:var(--quiet)}.ribbon .selected{color:var(--accent)}.ribbon .bottom{margin-top:auto}.ribbon button{padding:0}
+    .sidebar{padding:25px 13px 19px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}.side-eyebrow{font-size:10px;letter-spacing:1.4px;color:var(--quiet);padding:0 12px;margin-bottom:14px}
+    .plugin-id{display:flex;align-items:center;gap:10px;margin:0 10px 22px;font-size:15px;font-weight:600}.plugin-id .icon{color:var(--accent)}.nav-group{margin-bottom:23px}.nav-group h3{font-size:11px;font-weight:400;color:var(--quiet);padding:0 12px;margin:0 0 8px}
+    .nav-item{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;border-radius:7px;margin:3px 0}.nav-item:hover{background:var(--hover)}.nav-item.active{background:var(--accent-soft);color:var(--accent)}.nav-item .icon{width:16px;height:16px}.nav-item .arrow{margin-left:auto;font-size:12px;opacity:.7}
+    .sidebar-footer{margin-top:auto;border-top:1px solid var(--line);padding:18px 11px 0;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--quiet)}.help-button{display:flex;align-items:center;gap:6px;color:var(--muted);padding:0}
+    .settings{padding:30px 42px 25px;min-width:0}.breadcrumb{font-size:11px;color:var(--quiet);display:flex;gap:9px;align-items:center;margin-bottom:15px}.breadcrumb span:last-child{color:var(--muted)}.page-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:24px}
+    h1{font-size:27px;font-weight:580;letter-spacing:-.8px;line-height:1.3;margin:0 0 8px}h2{font-size:14px;font-weight:550;margin:0}.description{margin:0;color:var(--muted);font-size:12px}.save-status{display:flex;gap:6px;align-items:center;color:var(--quiet);font-size:11px;padding-top:8px;white-space:nowrap}.save-status .icon{width:13px;height:13px}
+    .repo-summary{display:flex;align-items:center;gap:15px;border:1px solid var(--line);border-radius:9px;padding:15px 18px;margin-bottom:25px;background:var(--surface)}.repo-icon{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:var(--hover);color:var(--muted)}.repo-text strong{font-size:12px;font-weight:550;display:block}.repo-text span{font:10px var(--mono);color:var(--quiet)}.repo-right{margin-left:auto;display:flex;align-items:center;gap:20px}.branch{display:flex;align-items:center;gap:6px;font:11px var(--mono);color:var(--muted)}.branch .icon{width:14px;height:14px}.status-dot{width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block}.small-status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:7px}
+    .section-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.section-heading span{font-size:11px;color:var(--quiet)}.trigger-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+    .trigger{padding:17px 18px;border-radius:9px;border:1px solid var(--line);background:var(--surface);transition:border-color .15s}.trigger:has(.switch[aria-checked="true"]){border-color:color-mix(in srgb,var(--accent) 29%,var(--line))}.trigger-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}.trigger-top>.icon{color:var(--muted);width:17px;height:17px}.trigger-top h3{font-size:12px;font-weight:550;margin:0}.switch{width:30px;height:17px;padding:2px;border-radius:20px;background:var(--line);margin-left:auto;flex:none;position:relative;transition:background .15s}.switch:before{content:"";display:block;width:13px;height:13px;border-radius:50%;background:var(--muted);transition:transform .15s}.switch[aria-checked="true"]{background:var(--accent)}.switch[aria-checked="true"]:before{transform:translateX(13px);background:var(--accent-ink)}
+    .trigger p{font-size:11px;line-height:1.7;color:var(--quiet);margin:0 0 13px}.trigger-detail{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);height:27px}.trigger-detail .icon{width:13px;height:13px;color:var(--green)}.number-input{width:43px;background:var(--window);color:var(--text);border:1px solid var(--line);border-radius:5px;padding:3px 5px;text-align:center;font:11px var(--mono);appearance:textfield}.number-input::-webkit-inner-spin-button{display:none}.subtle-tag{font-size:10px;background:var(--hover);padding:3px 7px;border-radius:4px;color:var(--muted)}kbd{font:10px var(--mono);border:1px solid var(--line);padding:3px 6px;border-radius:4px;background:var(--window)}
+    .method-box{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface);margin-bottom:19px}.method-row{display:flex;padding:17px 18px;align-items:center;justify-content:space-between;gap:18px}.method-row p{font-size:11px;color:var(--quiet);margin:4px 0 0}.method-options{display:flex;padding:3px;background:var(--window);border:1px solid var(--line);border-radius:6px}.method-options button{padding:5px 13px;font:11px var(--mono);border-radius:4px;color:var(--muted)}.method-options button.active{background:var(--accent-soft);color:var(--accent)}.method-note{padding:10px 18px;background:var(--panel);border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:center}.method-note .icon{width:13px;height:13px;color:var(--accent)}
+    .safety-foot{display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:11px;color:var(--quiet)}.safety-foot>span{display:flex;align-items:center;gap:7px}.safety-foot .icon{width:14px;height:14px}.text-button{color:var(--accent);font-size:11px;display:flex;gap:7px;align-items:center;padding:0}
+    .setting-list{border:1px solid var(--line);border-radius:9px;background:var(--surface);overflow:hidden}.setting-row{padding:19px 21px;display:flex;gap:25px;align-items:center;justify-content:space-between}.setting-row+.setting-row{border-top:1px solid var(--line)}.setting-row strong{font-size:12px;font-weight:550;display:block}.setting-row p{font-size:11px;color:var(--quiet);margin:5px 0 0}.setting-row input[type=text],.setting-row select{width:210px;background:var(--window);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:11px}.setting-list+.section-heading{margin-top:25px}.info-note{padding:17px 0;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}.info-note .icon{color:var(--accent);width:14px;height:14px}
+    .work-area{grid-column:3;display:grid;grid-template-columns:minmax(0,1fr) 326px;min-width:0}.note-pane{min-width:0;background:var(--window);display:flex;flex-direction:column}.note-tab{height:41px;display:flex;align-items:center;gap:10px;padding:0 20px;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted)}.note-tab .icon{width:13px;height:13px}.note-tab .tab-dot{width:4px;height:4px;border-radius:50%;background:var(--quiet);margin-left:auto}
+    .note-content{padding:31px 39px 28px;max-width:710px;width:100%;margin:0 auto}.note-crumb{font-size:10px;color:var(--quiet);margin-bottom:27px}.note-content h1{font-size:27px;line-height:1.5;letter-spacing:-.6px;margin-bottom:18px}.note-content p{font-size:12px;line-height:2;color:var(--muted);margin:0 0 20px}.note-content h2{font-size:16px;margin:27px 0 14px}.note-content blockquote{border-left:2px solid var(--accent);padding-left:16px;margin:24px 0;color:var(--muted);font-size:12px;line-height:1.9}.task-line{display:flex;gap:9px;align-items:center;font-size:12px;color:var(--muted);padding:5px 0}.task-line .check{width:12px;height:12px;border:1px solid var(--line);border-radius:3px}.task-line .check.done{background:var(--accent-soft);border-color:var(--accent);position:relative}.task-line .check.done:after{content:"";width:6px;height:3px;border:solid var(--accent);border-width:0 0 1px 1px;transform:rotate(-45deg);position:absolute;left:2px;top:3px}.note-date{color:var(--quiet);font-size:10px;margin-top:37px;display:flex;gap:8px;align-items:center}
+    .git-pane{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}.git-top{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 12px}.git-top h2{font-size:13px}.git-top>div{display:flex;gap:12px;color:var(--quiet)}.icon-button{display:grid;place-items:center;padding:0;color:var(--muted)}.icon-button .icon{width:15px;height:15px}.git-tabs{display:flex;margin:0 18px 15px;border-bottom:1px solid var(--line);gap:20px}.git-tabs button{padding:5px 0 10px;color:var(--quiet);font-size:11px;border-bottom:2px solid transparent}.git-tabs button.active{color:var(--text);border-bottom-color:var(--accent)}
+    .sync-card{margin:0 16px 15px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:13px 14px}.sync-title{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500}.sync-title .icon{color:var(--green);width:15px;height:15px}.sync-card p{font-size:10px;color:var(--quiet);margin:6px 0 12px;padding-left:23px}.sync-metrics{display:flex;gap:14px;border-top:1px solid var(--line);padding-top:10px;font:10px var(--mono);color:var(--muted)}.sync-metrics span{display:flex;gap:5px;align-items:center}.sync-metrics .branch{margin-left:auto;font-size:10px}.sync-card.conflict{border-color:color-mix(in srgb,var(--amber) 45%,var(--line))}.sync-card.conflict .sync-title .icon{color:var(--amber)}.sync-card.conflict .sync-title{color:var(--amber)}
+    .file-section{margin-bottom:13px}.file-section-head{padding:0 19px 7px;display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted)}.file-section-head .count{font:9px var(--mono);background:var(--hover);border-radius:4px;min-width:16px;text-align:center}.file-section-head button{margin-left:auto;font-size:11px;color:var(--quiet);padding:0}.file-row{display:flex;align-items:center;gap:8px;padding:8px 18px;font-size:11px;cursor:pointer}.file-row:hover,.file-row.selected{background:var(--hover)}.file-row .icon{width:13px;height:13px;color:var(--quiet)}.file-name{flex:1;min-width:0}.file-name small{display:block;font-size:9px;color:var(--quiet);line-height:1.4}.file-status{font:10px var(--mono);color:var(--amber)}.file-status.added{color:var(--green)}.file-status.staged{color:var(--accent)}.stage-button{color:var(--quiet);font-size:15px;padding:0 2px;line-height:1}.file-empty{font-size:11px;color:var(--quiet);padding:5px 20px 12px}
+    .commit-box{margin-top:auto;padding:18px 17px 16px;border-top:1px solid var(--line)}.commit-box textarea{width:100%;height:73px;resize:vertical;min-height:60px;background:var(--window);border:1px solid var(--line);border-radius:6px;color:var(--text);padding:10px 11px;font-size:11px;line-height:1.7}.commit-box textarea::placeholder{color:var(--quiet)}.commit-actions{display:flex;gap:5px;margin-top:9px}.primary{border-radius:6px;background:var(--accent);color:var(--accent-ink);padding:9px 13px;font-size:11px;font-weight:550;display:flex;align-items:center;justify-content:center;gap:8px}.primary .icon{width:14px;height:14px}.commit-actions .primary{flex:1}.commit-actions .secondary{padding:7px 10px;border:1px solid var(--line);border-radius:6px;color:var(--muted)}.commit-hint{display:flex;justify-content:space-between;margin-top:9px;font-size:9px;color:var(--quiet)}
+    .history{padding:5px 21px}.history-entry{position:relative;padding:0 0 23px 17px;border-left:1px solid var(--line);font-size:11px}.history-entry:before{content:"";position:absolute;width:5px;height:5px;background:var(--accent);border:3px solid var(--panel);box-sizing:content-box;border-radius:50%;left:-6px;top:4px}.history-entry strong{font-weight:500;display:block}.history-entry small{font-size:9px;color:var(--quiet);display:block;margin-top:4px}.history-entry code{font:9px var(--mono);color:var(--accent)}
+    .note-nav .nav-item{font-size:11px}.note-nav .sidebar-footer{font-size:10px}.folder{color:var(--quiet);padding:10px 11px 4px;font-size:10px}.folder .icon{width:12px;height:12px;margin-right:6px}.conflict-editor{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:22px}.conflict-editor .conflict-heading{display:flex;align-items:center;justify-content:space-between;background:var(--amber-soft);padding:10px 13px;font-size:10px;color:var(--amber)}.conflict-half{padding:13px 16px;background:var(--surface)}.conflict-half+.conflict-half{border-top:1px dashed var(--line)}.conflict-half small{color:var(--quiet);font-size:10px;display:block;margin-bottom:6px}.conflict-half p{margin:0;font-size:12px;color:var(--text);line-height:1.8}.resolution-buttons{display:flex;gap:6px;padding:12px 13px;border-top:1px solid var(--line)}.resolution-buttons button{font-size:10px;color:var(--accent);padding:5px 9px;border:1px solid var(--line);border-radius:5px}.resolution-message{padding:18px;background:var(--surface);font-size:12px;line-height:1.9}.resolution-message .icon{color:var(--green);margin-right:7px;width:14px;height:14px}
+    .app-statusbar{height:27px;border-top:1px solid var(--line);background:var(--panel);display:flex;align-items:center;gap:15px;padding:0 15px;font-size:9px;color:var(--quiet)}.app-statusbar .status-right{margin-left:auto;display:flex;gap:16px}.app-statusbar .icon{width:11px;height:11px}
+    .design-footer{display:flex;justify-content:space-between;gap:20px;margin-top:20px;color:var(--quiet);font-size:11px}.design-footer p{margin:0}.design-footer strong{color:var(--muted);font-weight:400}.scenario-control{display:flex;gap:6px;align-items:center}.scenario-control button{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:4px 9px}.scenario-control button.active{color:var(--accent);border-color:var(--accent)}
+    .toast{position:fixed;bottom:28px;left:50%;transform:translate(-50%,12px);background:var(--hover);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px 17px;font-size:12px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;z-index:5}.toast.visible{opacity:1;transform:translate(-50%,0)}.toast .icon{width:14px;height:14px;color:var(--accent);margin-right:8px}.hidden{display:none!important}
+    @media(min-width:1400px){.settings{padding:35px 53px 29px}.trigger{padding:20px 22px}.trigger p{font-size:12px}.trigger-top h3{font-size:13px}.trigger-grid{gap:14px}.method-row{padding:20px 22px}.workspace{min-height:685px}}
+    @media(max-width:1100px){.prototype{padding:22px}.workspace{grid-template-columns:42px 180px minmax(0,1fr)}.settings{padding:27px}.work-area{grid-template-columns:minmax(0,1fr) 292px}.note-content{padding:28px 25px}.prototype-label{display:none}}
+    @media(max-width:850px){.workspace{grid-template-columns:40px 155px minmax(0,1fr)}.settings{padding:24px 20px}.repo-right{gap:8px}.repo-right .small-status{display:none}.trigger{padding:13px}.trigger-grid{gap:8px}.trigger-detail{flex-wrap:wrap;height:auto;min-height:27px}.method-row{align-items:flex-start;flex-direction:column}.work-area{grid-template-columns:1fr}.note-pane{display:none}.work-area .git-pane{border-left:0}.design-footer{flex-direction:column;gap:8px}.design-controls{gap:6px}.segments button{padding:6px 11px}.page-head{gap:10px}.save-status{display:none}}
+    @media(max-width:600px){.prototype{padding:14px 10px}.design-bar{align-items:flex-start;gap:12px;flex-wrap:wrap}.design-controls{width:100%;justify-content:space-between}.design-brand span{font-size:10px}.workspace{grid-template-columns:36px minmax(0,1fr)}.sidebar{display:none}.settings,.work-area{grid-column:2}.settings{padding:23px 17px}.trigger-grid{grid-template-columns:1fr}.app{min-height:660px}.repo-summary{padding:12px}.safety-foot{align-items:flex-start;flex-direction:column;gap:12px}.setting-row{padding:17px;gap:10px;align-items:flex-start;flex-direction:column}.setting-row .switch{margin-left:0}.setting-row input[type=text],.setting-row select{width:100%}.title-end{display:none}.window-dots{min-width:50px}.window-title{font-size:10px}.app-statusbar .status-right>span:first-child{display:none}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="i-git" viewBox="0 0 24 24"><path d="m12 2 10 10-10 10L2 12Z"/><path d="m8 6 8 8M8 6v8"/><circle cx="8" cy="6" r="1.5"/><circle cx="8" cy="16" r="1.5"/><circle cx="16" cy="14" r="1.5"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 7a8 8 0 0 0-14-2L3 8m0-5v5h5M4 17a8 8 0 0 0 14 2l3-3m0 5v-5h-5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8Z"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M18 7c0 8-12 4-12 10"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7V5h7l2 2h9v13H3Z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Z"/><path d="M14 3v5h5M8 12h8m-8 4h6"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="m9 3-1 3-3 1-2 4 2 2v4l4 2 3-1 3 1 4-2v-4l2-2-2-4-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-warning" viewBox="0 0 24 24"><path d="m12 3 10 18H2Z"/><path d="M12 9v5m0 3v1"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8a3 3 0 0 1 6 1c0 2-3 2-3 4m0 3v1"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M9 3v6m7 0v6M8 15v6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 15A9 9 0 0 1 9 3a9 9 0 1 0 11 12Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><path d="m4 6 5 6-5 6m8 0h8"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M4 9a8 8 0 1 1 1 8M3 3v6h6M12 7v5l3 2"/></symbol>
+</defs></svg>
+<div class="prototype">
+  <header class="design-bar">
+    <div class="design-brand"><div class="mark"><svg class="icon"><use href="#i-git"/></svg></div><div><strong>OBSIDIAN GIT</strong><span>界面设计探索 / 方案 01</span></div></div>
+    <div class="design-controls">
+      <div class="segments" aria-label="原型页面"><button class="active" data-view="settings" aria-pressed="true">设置中心</button><button data-view="workbench" aria-pressed="false">同步侧栏</button></div>
+      <button class="theme-button" id="themeButton" aria-label="切换明暗主题"><svg class="icon"><use href="#i-sun"/></svg><span>浅色</span></button>
+      <span class="prototype-label">可交互原型 · 示例数据</span>
+    </div>
+  </header>
+  <div class="app">
+    <div class="titlebar"><div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="window-title"><svg class="icon" style="width:13px;height:13px"><use href="#i-folder"/></svg><b>我的知识库</b><span>/</span><span>Obsidian</span></div><div class="title-end">本地笔记库</div></div>
+    <div class="workspace">
+      <div class="ribbon" aria-label="Obsidian 工具栏示意"><svg class="icon"><use href="#i-folder"/></svg><svg class="icon"><use href="#i-search"/></svg><svg class="icon"><use href="#i-note"/></svg><svg class="icon selected"><use href="#i-git"/></svg><button class="bottom" data-view="settings" aria-label="打开插件设置"><svg class="icon"><use href="#i-settings"/></svg></button></div>
+      <aside class="sidebar" id="settingsNav">
+        <div class="side-eyebrow">第三方插件</div><div class="plugin-id"><svg class="icon"><use href="#i-git"/></svg>Git 同步</div>
+        <nav class="nav-group" aria-label="设置分类"><h3>偏好设置</h3><button class="nav-item active" data-page="automatic"><svg class="icon"><use href="#i-sync"/></svg>自动同步<span class="arrow">›</span></button><button class="nav-item" data-page="commit"><svg class="icon"><use href="#i-branch"/></svg>提交与拉取</button><button class="nav-item" data-page="repository"><svg class="icon"><use href="#i-folder"/></svg>仓库与认证</button><button class="nav-item" data-page="appearance"><svg class="icon"><use href="#i-sliders"/></svg>界面与显示</button></nav>
+        <nav class="nav-group" aria-label="工作台入口"><h3>工作空间</h3><button class="nav-item" data-view="workbench"><svg class="icon"><use href="#i-layout"/></svg>打开同步侧栏</button></nav>
+        <div class="sidebar-footer"><button class="help-button" data-action="help"><svg class="icon" style="width:13px;height:13px"><use href="#i-help"/></svg>使用帮助</button><span>Git 中文版</span></div>
+      </aside>
+      <main class="settings" id="settingsContent"></main>
+      <aside class="sidebar note-nav hidden" id="noteNav">
+        <div class="side-eyebrow">笔记库</div><div class="plugin-id" style="font-size:13px"><svg class="icon"><use href="#i-folder"/></svg>我的知识库</div>
+        <div class="folder"><svg class="icon"><use href="#i-folder"/></svg>日常记录</div><div class="nav-item">周记 · 第 42 周</div><div class="folder"><svg class="icon"><use href="#i-folder"/></svg>知识花园</div><div class="nav-item active"><svg class="icon"><use href="#i-note"/></svg>长期主义的笔记</div><div class="nav-item"><svg class="icon"><use href="#i-note"/></svg>阅读清单</div><div class="nav-item"><svg class="icon"><use href="#i-note"/></svg>灵感收集</div><div class="folder"><svg class="icon"><use href="#i-folder"/></svg>项目档案</div><div class="nav-item"><svg class="icon"><use href="#i-note"/></svg>关于这个知识库</div>
+        <div class="sidebar-footer"><span>28 个文件</span><span>本地存储</span></div>
+      </aside>
+      <main class="work-area hidden" id="workbench">
+        <section class="note-pane"><div class="note-tab"><svg class="icon"><use href="#i-note"/></svg><span id="noteTab">长期主义的笔记</span><span class="tab-dot"></span></div><article class="note-content" id="noteContent"></article></section>
+        <aside class="git-pane" aria-label="Git 同步侧栏">
+          <div class="git-top"><h2>Git 同步</h2><div><button class="icon-button" data-action="refresh" aria-label="刷新状态"><svg class="icon"><use href="#i-sync"/></svg></button><button class="icon-button" data-view="settings" aria-label="打开设置"><svg class="icon"><use href="#i-sliders"/></svg></button></div></div>
+          <div class="git-tabs" aria-label="侧栏内容"><button class="active" data-git-tab="changes">文件改动</button><button data-git-tab="history">提交记录</button></div>
+          <div id="gitContent"></div>
+          <div class="commit-box">
+            <textarea id="commitMessage" aria-label="提交信息" placeholder="记录这次改动…&#10;留空使用默认提交信息"></textarea>
+            <div class="commit-actions"><button class="primary" id="syncButton"><svg class="icon"><use href="#i-sync"/></svg><span>提交并同步</span></button><button class="secondary" data-action="pause" aria-label="暂停或恢复自动同步"><svg class="icon" style="width:13px;height:13px"><use href="#i-pause"/></svg></button></div>
+            <div class="commit-hint"><span id="commitHint">同步前自动保护本地修改</span><span>仅本地模拟</span></div>
+          </div>
+        </aside>
+      </main>
+    </div>
+    <div class="app-statusbar"><span><svg class="icon"><use href="#i-shield"/></svg> 本地保护已启用</span><div class="status-right"><span>28 个文件</span><span id="footerState">自动同步已开启</span><span><svg class="icon"><use href="#i-branch"/></svg> main</span></div></div>
+  </div>
+  <footer class="design-footer"><p><strong>更安静的界面，更清楚的状态。</strong> 分类设置 · 明确主操作 · 安全状态始终可见</p><div class="scenario-control"><span>侧栏状态</span><button data-scenario="normal" class="active">日常改动</button><button data-scenario="conflict">冲突示例</button></div></footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+  // 原型独立于插件，所有状态和文件内容均为本地示例，不访问仓库。
+  const copy = {
+    saved:"原型设置已更新", demo:"这是交互原型，未修改真实插件设置。",
+    refreshed:"示例状态已刷新，没有执行 Git 命令。", help:"先查看文件改动，再提交并同步；出现冲突时，自动同步会暂停。",
+    paused:"自动同步已暂停", resumed:"自动同步已恢复", manualDisabled:"请先在「自动同步」中启用手动同步。",
+    conflictBlocked:"请先检查冲突内容并标记为已解决。", resolveFirst:"请先选择要保留的内容。",
+    staged:"示例文件已暂存", resolved:"冲突已标记为解决；提交合并后再恢复同步。",
+    syncing:"正在同步…", syncingDetail:"保护本地修改 → 拉取 → 推送（模拟）",
+    synced:"所有改动已同步", syncedDetail:"刚刚同步 · 笔记已安全保存", pending:"有改动等待同步", pendingDetail:"上次同步于 3 分钟前",
+    conflict:"发现冲突，同步已暂停", conflictDetail:"1 个文件需要你确认 · 本地改动已保护",
+    mergeReady:"冲突已解决，等待提交", mergeDetail:"合并提交完成前，自动同步保持暂停",
+    safeHint:"同步前自动保护本地修改", conflictHint:"先解决冲突，再提交合并", mergeHint:"提交合并后恢复自动同步",
+    syncAction:"提交并同步", mergeAction:"完成合并并同步", noChangesAction:"立即同步",
+    methods:{merge:"保留本地与远端历史，自动创建合并提交。推荐用于多设备同步。",rebase:"拉取前保护本地修改；发生变基冲突时，请使用原生 Git 继续或中止。",reset:"先备份本地历史，再使用 --keep 对齐远端；可能覆盖本地修改时会拒绝执行。"},
+    pageNames:{automatic:"自动同步",commit:"提交与拉取",repository:"仓库与认证",appearance:"界面与显示"}
+  };
+  const state={view:"settings",page:"automatic",theme:"dark",method:"merge",scenario:"normal",gitTab:"changes",paused:false,resolution:null,marked:false,syncing:false,synced:false,files:[{name:"长期主义的笔记.md",path:"知识花园",kind:"M",staged:false},{name:"阅读清单.md",path:"知识花园",kind:"M",staged:false},{name:"周记 · 第 42 周.md",path:"日常记录",kind:"A",staged:false}],settings:{manual:true,scheduled:false,boot:true,push:true,smart:true,scope:true,notice:true}};
+  const $=selector=>document.querySelector(selector);
+  const icon=(name,cls="")=>`<svg class="icon ${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+  const toggle=(key,label)=>`<button class="switch" role="switch" aria-label="${label}" aria-checked="${state.settings[key]}" data-toggle="${key}"></button>`;
+  let toastTimer,syncTimer;
+  function toast(text){$("#toast").innerHTML=icon("check")+text;$("#toast").classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("#toast").classList.remove("visible"),2600)}
+  function methodBox(){return `<div class="section-heading"><h2>远端改动，如何整合？</h2><span>拉取策略</span></div><div class="method-box"><div class="method-row"><div><h2>整合远端更新</h2><p>选择适合你的历史管理方式</p></div><div class="method-options" aria-label="拉取策略">${["merge","rebase","reset"].map(m=>`<button data-method="${m}" class="${state.method===m?"active":""}" aria-pressed="${state.method===m}">${m}</button>`).join("")}</div></div><div class="method-note">${icon("shield")}<span>${copy.methods[state.method]}</span></div></div>`}
+  function header(){return `<div class="breadcrumb"><span>插件设置</span><span>/</span><span>${copy.pageNames[state.page]}</span></div><div class="page-head"><div><h1>${copy.pageNames[state.page]}</h1><p class="description">${({automatic:"专注写作，剩下的交给 Git。",commit:"让每次改动都有清晰、可靠的记录。",repository:"连接你的笔记库，不在插件中保存密码。",appearance:"只显示你真正需要的信息。"})[state.page]}</p></div><span class="save-status">${icon("check")}原型设置 · 仅本地模拟</span></div>`}
+  function row(title,desc,control){return `<div class="setting-row"><div><strong>${title}</strong><p>${desc}</p></div>${control}</div>`}
+  function renderSettings(){
+    let content=header();
+    if(state.page==="automatic"){
+      content+=`<div class="repo-summary"><div class="repo-icon">${icon("folder")}</div><div class="repo-text"><strong>我的知识库</strong><span>knowledge-garden / origin</span></div><div class="repo-right"><span class="branch">${icon("branch")}main</span><span class="small-status"><i class="status-dot"></i>仓库已连接</span></div></div><div class="section-heading"><h2>选择何时同步</h2><span>四种触发方式，独立控制</span></div><div class="trigger-grid">
+      <section class="trigger"><div class="trigger-top">${icon("play")}<h3>手动同步</h3>${toggle("manual","手动同步")}</div><p>需要时主动提交、拉取和推送。</p><div class="trigger-detail"><kbd>⌘ / Ctrl + P</kbd><span>打开命令面板</span></div></section>
+      <section class="trigger"><div class="trigger-top">${icon("clock")}<h3>定时执行</h3>${toggle("scheduled","定时执行")}</div><p>按固定间隔拉取与推送远端改动。</p><div class="trigger-detail"><span>每</span><input class="number-input" type="number" min="1" max="1440" value="30" aria-label="定时同步间隔（分钟）"><span>分钟</span><span class="subtle-tag">可分别配置</span></div></section>
+      <section class="trigger"><div class="trigger-top">${icon("download")}<h3>启动时拉取</h3>${toggle("boot","启动时拉取")}</div><p>打开笔记库时，先获取最新版本。</p><div class="trigger-detail">${icon("shield")}<span>拉取前保护本地修改</span></div></section>
+      <section class="trigger"><div class="trigger-top">${icon("upload")}<h3>提交后推送</h3>${toggle("push","提交后推送")}</div><p>停止编辑后提交，再自动推送到远端。</p><div class="trigger-detail"><span>停止编辑</span><input class="number-input" type="number" min="0" max="1440" value="5" aria-label="停止编辑后自动提交间隔（分钟）"><span>分钟后提交</span></div></section></div>`;
+      content+=methodBox()+`<div class="safety-foot"><span>${icon("shield")}冲突时暂停同步，网络恢复后自然重试。</span><button class="text-button" data-view="workbench">查看同步侧栏 ${icon("arrow")}</button></div>`;
+    }else if(state.page==="commit"){
+      content+=`<div class="section-heading"><h2>提交偏好</h2><span>清晰的记录，从这里开始</span></div><div class="setting-list">${row("智能提交","没有暂存内容时，暂存并提交全部改动。",toggle("smart","智能提交"))}${row("默认提交信息","支持 {{date}}、{{numFiles}} 等占位符。",'<input type="text" aria-label="默认提交信息" value="笔记更新：{{date}}">')}${row("提交模式","明确区分全部改动与已暂存改动。",'<select aria-label="提交模式"><option>智能提交</option><option>仅提交已暂存改动</option><option>提交全部改动</option></select>')}</div><div style="height:24px"></div>`;
+      content+=methodBox()+`<div class="info-note">${icon("shield")}合并或变基尚未完成时，不执行自动提交与推送。</div>`;
+    }else if(state.page==="repository"){
+      content+=`<div class="section-heading"><h2>当前仓库</h2><span>示例连接</span></div><div class="setting-list">${row("笔记库","我的知识库 · 工作分支 main",'<span class="small-status"><i class="status-dot"></i>已连接</span>')}${row("远端","origin · 由系统 Git 管理连接与凭据",'<span class="subtle-tag">不展示私有地址</span>')}${row("限制到笔记库","文件操作不影响笔记库外的内容。",toggle("scope","限制到笔记库"))}</div><div class="section-heading"><h2>认证与安全</h2><span>凭据交给系统</span></div><div class="setting-list">${row("系统凭据助手","使用系统 Git 凭据助手，不保存 Token 或密码。",'<span class="subtle-tag">推荐</span>')}${row("本地修改保护","整合远端之前先保护改动；失败时保留恢复路径。",icon("shield"))}${row("子模块同步","当前版本安全拒绝子模块自动同步，请在终端处理。",'<span class="subtle-tag">安全限制</span>')}</div>`;
+    }else{
+      content+=`<div class="section-heading"><h2>显示偏好</h2><span>跟随你的工作习惯</span></div><div class="setting-list">${row("界面语言","正式界面支持中文与英文；本原型仅展示中文。",'<span class="subtle-tag">简体中文</span>')}${row("外观主题","正式插件跟随 Obsidian，本原型可切换明暗主题。",`<button class="text-button" data-action="theme">${state.theme==="dark"?"切换到浅色":"切换到深色"} ${icon("arrow")}</button>`)}${row("操作通知","显示提交、拉取和推送的重要结果。",toggle("notice","操作通知"))}${row("错误与冲突","出错时说明原因，给出下一步操作。",'<span class="small-status"><i class="status-dot"></i>始终明确可见</span>')}</div><div class="info-note">${icon("layout")}侧栏采用紧凑布局；常用操作不再藏在图标中。</div>`;
+    }
+    $("#settingsContent").innerHTML=content;
+    document.querySelectorAll("[data-page]").forEach(b=>{b.classList.toggle("active",b.dataset.page===state.page);b.setAttribute("aria-current",b.dataset.page===state.page?"page":"false")});
+  }
+  function noteContent(){
+    if(state.scenario==="conflict"){
+      $("#noteTab").textContent="长期主义的笔记 · 冲突处理";
+      return `<div class="note-crumb">知识花园 / 长期主义的笔记.md</div><h1>确认你想保留的版本</h1><p>同一段内容在两台设备上被修改了。请检查两个版本，本地改动已有保护性提交。</p><div class="conflict-editor"><div class="conflict-heading"><span>冲突 01 / 01</span><span>note.md</span></div>${state.resolution?`<div class="resolution-message">${icon("check")}已选择${({ours:"本地内容",theirs:"远端内容",both:"双方内容"})[state.resolution]}<br>${state.resolution==="ours"?"每周回顾一次，把零散笔记整理成主题。":state.resolution==="theirs"?"每天花十分钟，连接新想法与旧知识。":"每周回顾一次，把零散笔记整理成主题。<br>每天花十分钟，连接新想法与旧知识。"}</div>`:`<div class="conflict-half"><small>本地版本 · ours</small><p>每周回顾一次，把零散笔记整理成主题。</p></div><div class="conflict-half"><small>远端版本 · theirs</small><p>每天花十分钟，连接新想法与旧知识。</p></div>`}<div class="resolution-buttons"><button data-resolve="ours">保留本地</button><button data-resolve="theirs">保留远端</button><button data-resolve="both">保留双方</button></div></div><div class="info-note">${icon("shield")}${state.marked?"已标记为解决，下一步提交合并。":"检查结果后，在侧栏标记为已解决。"}</div>`;
+    }
+    $("#noteTab").textContent="长期主义的笔记";
+    return `<div class="note-crumb">知识花园 / 长期主义的笔记</div><h1>把笔记变成<br>可以生长的知识。</h1><p>不是记录得越多越好，而是让每一次记录，都能在未来的某个时刻重新发挥价值。</p><blockquote>写下一个想法，是为了让它有机会<br>与另一个想法相遇。</blockquote><h2>留一点空间给思考</h2><p>记录、连接、回顾。一个可靠的知识库，应该让我们专注于内容，而不是担心它有没有被保存。</p><div class="task-line"><span class="check done"></span>把这周的阅读笔记整理到主题页</div><div class="task-line"><span class="check done"></span>给零散想法建立双向链接</div><div class="task-line"><span class="check"></span>周末回顾一次知识花园</div><div class="note-date">${icon("clock")}最后编辑于今天 10:42</div>`;
+  }
+  function fileRows(files){return files.map(f=>`<div class="file-row ${f.name.startsWith("长期")?"selected":""}" data-file="${f.name}" tabindex="0" role="button" aria-label="查看 ${f.name} 的示例改动">${icon("note")}<div class="file-name">${f.name}<small>${f.path}</small></div><span class="file-status ${f.staged?"staged":f.kind==="A"?"added":""}">${f.staged?"✓":f.kind}</span><button class="stage-button" data-stage="${f.name}" aria-label="${f.staged?"取消暂存":"暂存"} ${f.name}">${f.staged?"−":"+"}</button></div>`).join("")}
+  function fileGroup(label,files){return files.length?`<div class="file-section"><div class="file-section-head"><span>${label}</span><span class="count">${files.length}</span>${label==="待暂存"?'<button data-action="stageAll">全部暂存</button>':""}</div>${fileRows(files)}</div>`:""}
+  function renderGit(){
+    let title=copy.pending,detail=copy.pendingDetail,kind="check";
+    if(state.synced){title=copy.synced;detail=copy.syncedDetail}
+    if(state.paused&&!state.syncing){title=copy.paused;detail="手动同步仍然可用"}
+    if(state.scenario==="conflict"){title=state.marked?copy.mergeReady:copy.conflict;detail=state.marked?copy.mergeDetail:copy.conflictDetail;kind=state.marked?"check":"warning"}
+    if(state.syncing){title=copy.syncing;detail=copy.syncingDetail;kind="sync"}
+    let content=`<div class="sync-card ${state.scenario==="conflict"?"conflict":""}"><div class="sync-title">${icon(kind)}${title}</div><p>${detail}</p><div class="sync-metrics"><span>↑ ${state.synced?0:2} 待推送</span><span>↓ ${state.scenario==="conflict"?1:0} 待拉取</span><span class="branch">${icon("branch")}main</span></div></div>`;
+    if(state.gitTab==="history"){
+      content+=`<div class="history">${[["整理知识花园的双向链接","今天 10:39 · 本机","a8f2c10"],["更新阅读清单","今天 09:12 · 本机","e1b98d4"],["新增本周回顾","昨天 21:08 · 另一台设备","0c2d8a1"]].map(e=>`<div class="history-entry"><strong>${e[0]}</strong><small>${e[1]}</small><code>${e[2]}</code></div>`).join("")}</div>`;
+    }else if(state.scenario==="conflict"){
+      content+=`<div class="file-section"><div class="file-section-head"><span>${state.marked?"已解决，待提交":"需要解决"}</span><span class="count">1</span></div><div class="file-row selected">${icon("note")}<div class="file-name">长期主义的笔记.md<small>知识花园</small></div><span class="file-status">${state.marked?"✓":"!"}</span></div><div style="padding:12px 18px"><button class="text-button" data-action="markResolved">${state.marked?"已标记为解决":state.resolution?"标记为已解决":"先选择冲突内容"} ${icon("arrow")}</button></div></div>`;
+    }else if(state.files.length){content+=fileGroup("已暂存",state.files.filter(f=>f.staged))+fileGroup("待暂存",state.files.filter(f=>!f.staged))}
+    else{content+=`<div class="file-empty">${icon("check")} 工作区干净，继续安心写作。</div>`}
+    $("#gitContent").innerHTML=content;
+    $("#syncButton").disabled=state.syncing||(state.scenario==="conflict"&&!state.marked)||!state.settings.manual;
+    $("#syncButton span").textContent=state.syncing?copy.syncing:state.scenario==="conflict"?copy.mergeAction:state.files.length?copy.syncAction:copy.noChangesAction;
+    $("#commitHint").textContent=state.scenario==="conflict"?(state.marked?copy.mergeHint:copy.conflictHint):copy.safeHint;
+    $("#footerState").textContent=state.scenario==="conflict"?"冲突处理中 · 自动同步已暂停":state.paused?copy.paused:"自动同步已开启";
+    document.querySelectorAll("[data-git-tab]").forEach(b=>{b.classList.toggle("active",b.dataset.gitTab===state.gitTab);b.setAttribute("aria-pressed",b.dataset.gitTab===state.gitTab)});
+  }
+  function renderWorkbench(){ $("#noteContent").innerHTML=noteContent(); renderGit() }
+  function setView(view){
+    state.view=view;const settings=view==="settings";
+    $("#settingsNav").classList.toggle("hidden",!settings);$("#settingsContent").classList.toggle("hidden",!settings);$("#noteNav").classList.toggle("hidden",settings);$("#workbench").classList.toggle("hidden",settings);
+    document.querySelectorAll(".segments [data-view]").forEach(b=>{b.classList.toggle("active",b.dataset.view===view);b.setAttribute("aria-pressed",b.dataset.view===view)});
+    settings?renderSettings():renderWorkbench();
+  }
+  function setTheme(){state.theme=state.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=state.theme;$("#themeButton").innerHTML=icon(state.theme==="dark"?"sun":"moon")+`<span>${state.theme==="dark"?"浅色":"深色"}</span>`;if(state.page==="appearance")renderSettings()}
+  function setScenario(scenario){
+    clearTimeout(syncTimer);state.syncing=false;state.scenario=scenario;state.resolution=null;state.marked=false;state.synced=false;state.paused=false;
+    if(scenario==="normal")state.files=[{name:"长期主义的笔记.md",path:"知识花园",kind:"M",staged:false},{name:"阅读清单.md",path:"知识花园",kind:"M",staged:false},{name:"周记 · 第 42 周.md",path:"日常记录",kind:"A",staged:false}];
+    document.querySelectorAll("[data-scenario]").forEach(b=>{b.classList.toggle("active",b.dataset.scenario===scenario);b.setAttribute("aria-pressed",b.dataset.scenario===scenario)});
+    state.gitTab="changes";setView("workbench");
+  }
+  function sync(){
+    if(state.syncing)return;if(!state.settings.manual){toast(copy.manualDisabled);return}
+    if(state.scenario==="conflict"&&!state.marked){toast(copy.conflictBlocked);return}
+    state.syncing=true;renderGit();
+    syncTimer=setTimeout(()=>{state.syncing=false;state.synced=true;state.scenario="normal";state.marked=false;state.resolution=null;state.files=[];state.paused=false;$("#commitMessage").value="";renderWorkbench();document.querySelectorAll("[data-scenario]").forEach(b=>b.classList.toggle("active",b.dataset.scenario==="normal"));toast("示例同步完成，未执行真实 Git 操作。")},1700);
+  }
+  document.addEventListener("click",event=>{
+    const b=event.target.closest("button");if(!b)return;
+    if(b.dataset.view)setView(b.dataset.view);
+    else if(b.dataset.page){state.page=b.dataset.page;renderSettings()}
+    else if(b.dataset.toggle){state.settings[b.dataset.toggle]=!state.settings[b.dataset.toggle];b.setAttribute("aria-checked",state.settings[b.dataset.toggle]);toast(copy.saved);renderGit()}
+    else if(b.dataset.method){state.method=b.dataset.method;renderSettings();toast(copy.saved)}
+    else if(b.dataset.scenario)setScenario(b.dataset.scenario);
+    else if(b.dataset.gitTab){state.gitTab=b.dataset.gitTab;renderGit()}
+    else if(b.dataset.stage){event.stopPropagation();const file=state.files.find(f=>f.name===b.dataset.stage);file.staged=!file.staged;renderGit();toast(copy.staged)}
+    else if(b.dataset.resolve){state.resolution=b.dataset.resolve;state.marked=false;renderWorkbench()}
+    else if(b.id==="themeButton"||b.dataset.action==="theme")setTheme();
+    else if(b.id==="syncButton")sync();
+    else if(b.dataset.action==="help")toast(copy.help);
+    else if(b.dataset.action==="refresh")toast(copy.refreshed);
+    else if(b.dataset.action==="stageAll"){state.files.forEach(f=>f.staged=true);renderGit();toast(copy.staged)}
+    else if(b.dataset.action==="markResolved"){if(!state.resolution){toast(copy.resolveFirst);return}state.marked=true;renderWorkbench();toast(copy.resolved)}
+    else if(b.dataset.action==="pause"){if(state.scenario==="conflict"){toast(copy.conflictBlocked);return}state.paused=!state.paused;renderGit();toast(state.paused?copy.paused:copy.resumed)}
+  });
+  function inspectFile(row){if(!row||state.scenario==="conflict")return;$("#noteTab").textContent=row.dataset.file;$("#noteContent").innerHTML=`<div class="note-crumb">${row.dataset.file} / 改动预览</div><h1>这次记录，多了一点新想法。</h1><p>文件预览是原型交互示例，不读取真实笔记。</p><div class="conflict-editor"><div class="conflict-heading" style="background:var(--green-soft);color:var(--green)"><span>新增内容</span><span>+ 2 行</span></div><div class="conflict-half"><p>连接新想法与已有知识。<br>为下次回顾留下一点线索。</p></div></div><div class="info-note">${icon("shield")}暂存文件后，可以一起提交并同步。</div>`}
+  document.addEventListener("click",e=>{if(!e.target.closest("button"))inspectFile(e.target.closest("[data-file]"))});
+  document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-file]")){e.preventDefault();inspectFile(e.target)}});
+  document.addEventListener("change",e=>{if(e.target.matches(".number-input")){const min=Number(e.target.min),max=Number(e.target.max);e.target.value=Math.max(min,Math.min(max,Number(e.target.value)||min))}if(e.target.closest("#settingsContent"))toast(copy.saved)});
+  setView("settings");renderGit();
+</script>
+</body>
+</html>
