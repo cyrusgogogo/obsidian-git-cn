@@ -1,13 +1,13 @@
 # 发布前审计清单
 
-发布到 BRAT 或社区插件市场前逐项确认。当前版本为 1.1.1（2026-10-19）。
+发布到 BRAT 或社区插件市场前逐项确认。当前版本为 1.2.0（2026-10-19）。
 
 ## BRAT 分发
 
 -   [x] Release 工作流上传独立的 `main.js`、`manifest.json`、`styles.css`，供 BRAT 下载
 -   [x] `manifest.json` 的 `id` 为 `obsidian-git-cn`（不可再改，否则丢失用户配置）
 -   [x] `manifest.json` 的 `isDesktopOnly` 为 `true`
--   [x] 已更新 `versions.json`（`1.0.0` / `1.1.0` / `1.1.1` → `1.13.1`）
+-   [x] 已更新 `versions.json`（`1.0.0` / `1.1.0` / `1.1.1` / `1.2.0` → `1.13.1`）
 -   [x] Release 工作流校验 tag、`package.json`、`manifest.json` 与 `versions.json` 一致，固定 Node 24 / pnpm 11.25.0，使用锁文件安装
 -   [x] 1.0.0 已通过 tag 触发工作流发布；后续版本沿用该分发流程
 
@@ -34,7 +34,8 @@
 -   [x] `pnpm run tsc` 通过
 -   [x] `pnpm run svelte`（svelte-check）通过
 -   [x] `pnpm run lint` 与 `pnpm run format` 通过
--   [x] Linux / Node 24.19.0 / pnpm 11.25.0：20 个测试文件、316 项测试全部通过；Windows CRLF 已知限制见 `docs/upstream.md`
+-   [x] Linux / Node 24.19.0 / pnpm 11.25.0：22 个测试文件、384 项测试全部通过；Windows CRLF 已知限制见 `docs/upstream.md`
+-   [x] Obsidian 1.14.4 实测：明暗主题、240–480px 侧栏、四类同步卡片、提交队列锁、草稿保留和历史视图正常
 
 ## 官方社区市场（仅准备，暂不提交）
 

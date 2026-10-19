@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.0](https://github.com/cyrusgogogo/obsidian-git-cn/releases/tag/1.2.0) (2026-10-19)
+
+- 自动同步设置按手动、定时、启动拉取和提交后推送分成卡片，新增仓库摘要与拉取策略的本地修改保护说明；摘要仅展示远端名称。
+- 源码控制保留 Gitcn 的水平工具栏与顶部提交区，统一文件名和目录展示；按钮、菜单和快捷键共用提交安全校验，合并与变基状态提示更明确。
+- 提交排队时锁定重复操作并捕获提交信息；等待期间继续编辑的草稿会保留，失败或取消时不清空输入。
+- 自动任务采用调度代次，使旧定时器、排队任务与完成回调失效，避免修改设置、暂停或冲突后旧任务重新启动。
+- 升级 TypeScript 6.0.3、isomorphic-git 1.44.1 及相关开发依赖；迁移模块解析配置并修正 Obsidian moment 的类型引用，继续使用宿主的运行时实例。
+- 验证：22 个测试文件中的 384 项测试、类型检查、Svelte、格式、静态检查与生产构建通过；真实 Obsidian 验证了明暗主题、240–480px 侧栏、设置卡片、提交队列和草稿保留。
+
+升级方式：在 BRAT 更新 `cyrusgogogo/obsidian-git-cn`，然后重启 Obsidian，确认 Gitcn 版本为 `1.2.0`。插件 ID 保持不变，保留已有配置；仍要求 Obsidian ≥1.13.1，仅支持桌面端。变基冲突需在终端执行 `git rebase --continue`，子模块自动同步暂不启用。
+
 ## [1.1.1](https://github.com/cyrusgogogo/obsidian-git-cn/releases/tag/1.1.1) (2026-10-19)
 
 - 插件显示名称改为 **Gitcn**，同步更新安装提示与文档；插件 ID 仍为 `obsidian-git-cn`，保留现有配置和 BRAT 更新关系。

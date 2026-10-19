@@ -15,7 +15,7 @@
 
 当前源码已跟进上游 v2.41.1 及后续 `master` 修复，详情见[上游跟进](docs/upstream.md)。出于数据安全，子模块自动同步暂时禁用；变基冲突需在终端执行 `git rebase --continue`。切换语言后如已有视图或命令仍显示旧语言，请重载插件。
 
-卡片式自动同步设置与提交草稿保护属于当前源码，尚未随 Release 发布。手动同步始终可用；各定时间隔设为 0 可分别关闭。推送开关控制「提交并同步」的推送，不会让每个普通手动提交都推送。同步任务处理中，侧栏会防止重复提交；失败或取消时保留提交信息。
+1.2.0 提供卡片式自动同步设置与提交草稿保护。手动同步始终可用；各定时间隔设为 0 可分别关闭。推送开关控制「提交并同步」的推送，不会让每个普通手动提交都推送。同步任务处理中，侧栏会防止重复提交；失败或取消时保留提交信息。
 
 ## 安装
 
@@ -43,7 +43,7 @@ bash install.sh "/path/to/your/vault"
 
 1. 在 Obsidian 社区插件市场搜索并安装启用 [BRAT](https://github.com/TfTHacker/obsidian42-brat)（Obsidian42-BRAT）。
 2. 打开「设置 → BRAT → Add Beta plugin」，输入仓库名 `cyrusgogogo/obsidian-git-cn` 并确认；BRAT 会自动把最新 [GitHub Release](https://github.com/cyrusgogogo/obsidian-git-cn/releases) 中的 `main.js`、`manifest.json`、`styles.css` 安装到你的笔记库。
-3. 重载 Obsidian，在「设置 → 第三方插件」中启用「Gitcn」，确认版本显示为 `1.1.1`（要求 Obsidian ≥1.13.1，仅支持桌面端）。
+3. 重载 Obsidian，在「设置 → 第三方插件」中启用「Gitcn」，确认版本显示为 `1.2.0`（要求 Obsidian ≥1.13.1，仅支持桌面端）。
 4. 以后发布新版本时，在 BRAT 设置中点「Update」即可升级；插件上架官方社区市场后，也可删掉 BRAT 记录改走市场更新。
 
 网络提示：BRAT 直接从 GitHub 下载 Release 产物，与插件的 Git 认证配置相互独立；若访问 GitHub 受限，请先配置代理，或改用「方式三」手动构建。
