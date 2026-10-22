@@ -91,8 +91,8 @@ importers:
         specifier: ^3.23.1
         version: 3.23.1(eslint@10.11.0(supports-color@7.2.0))(svelte@5.57.1(@typescript-eslint/types@8.71.1))
       obsidian:
-        specifier: ^1.13.1
-        version: 1.13.1(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)
+        specifier: ^1.14.4
+        version: 1.14.4(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)
       prettier:
         specifier: 3.9.10
         version: 3.9.10
@@ -1476,8 +1476,8 @@ packages:
   minimisted@2.0.1:
     resolution: {integrity: sha512-1oPjfuLQa2caorJUM8HV8lGgWCc0qqAO1MNv/k05G4qslmsndV/5WdNZrqCiyqiz3wohia2Ij2B7w2Dr7/IyrA==}
 
-  moment@2.29.4:
-    resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
+  moment@2.31.0:
+    resolution: {integrity: sha512-0acOTfMiWOheYS4eoWb80yYMb/JLvVv9SHbs2PehaDzfUG0Bw855SKyk0IKTnPGa5+U2bmi3W68l1+sGLX/pvw==}
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -1498,11 +1498,11 @@ packages:
     resolution: {integrity: sha512-NWmpvLSqUrgrAC9HCuxEvb+PSloHpqVu+FqcO4eeF2h5qYRhA7ev6KvelyQAKtegUbC6RypJnlEOhd8vloNKYg==}
     hasBin: true
 
-  obsidian@1.13.1:
-    resolution: {integrity: sha512-qtTEA2pmhJzhuhJqzbBFRYhpIOqvW+krDYjtFynv66KbxBbumHBlsJfWw3I4jtnK/6fZwbQhCrmmDdRwXmX56w==}
+  obsidian@1.14.4:
+    resolution: {integrity: sha512-Kyo+5t0wFW2On5irLOPrgtwWDnaJsvE9n/P1OVvdPytx+NqeHJXvxVqADNOqLp9bU1+I64B6i+dHb0fxR/ss3w==}
     peerDependencies:
-      '@codemirror/state': 6.5.0
-      '@codemirror/view': 6.38.6
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.13
 
   obug@2.1.4:
     resolution: {integrity: sha512-4a+OsYv9UktOJKE+l1A4OufDgdRF9PifWj+tJnHURo/P+WOxpG4GzUFL9qCalmWauao6ogiG+QvnCovwPoyAWA==}
@@ -3293,7 +3293,7 @@ snapshots:
     dependencies:
       minimist: 1.2.8
 
-  moment@2.29.4: {}
+  moment@2.31.0: {}
 
   mri@1.2.0: {}
 
@@ -3307,12 +3307,12 @@ snapshots:
     dependencies:
       abbrev: 1.1.1
 
-  obsidian@1.13.1(@codemirror/state@6.7.6)(@codemirror/view@6.43.13):
+  obsidian@1.14.4(@codemirror/state@6.7.6)(@codemirror/view@6.43.13):
     dependencies:
       '@codemirror/state': 6.7.6
       '@codemirror/view': 6.43.13
       '@types/codemirror': 5.60.8
-      moment: 2.29.4
+      moment: 2.31.0
 
   obug@2.1.4: {}
 
