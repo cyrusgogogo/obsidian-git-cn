@@ -46,7 +46,7 @@
         "@types/node": "^26.6.5",
         "@typescript-eslint/parser": "8.71.1",
         "@vitest/coverage-v8": "^5.0.3",
-        "commit-and-tag-version": "^13.2.1",
+        "commit-and-tag-version": "^13.3.0",
         "esbuild": "^0.28.2",
         "esbuild-svelte": "^0.9.5",
         "eslint": "^10.11.0",
